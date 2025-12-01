@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Message {
   id: string;
@@ -37,6 +39,33 @@ export default function Chat() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
+
+  // Load chat history on mount
+  useEffect(() => {
+    if (!user) return;
+    
+    const loadHistory = async () => {
+      const { data, error } = await supabase
+        .from('chat_messages')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: true })
+        .limit(50);
+
+      if (data && data.length > 0) {
+        const loadedMessages: Message[] = data.map(msg => ({
+          id: msg.id,
+          type: msg.role as "user" | "assistant",
+          content: msg.content,
+          timestamp: new Date(msg.created_at!),
+        }));
+        setMessages([initialMessages[0], ...loadedMessages]);
+      }
+    };
+
+    loadHistory();
+  }, [user]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -62,6 +91,15 @@ export default function Chat() {
     setIsTyping(true);
 
     try {
+      // Save user message to database
+      if (user) {
+        await supabase.from('chat_messages').insert({
+          user_id: user.id,
+          role: 'user',
+          content: userInput,
+        });
+      }
+
       const chatMessages = messages
         .filter(m => m.id !== "1") // Exclude the initial greeting
         .map(m => ({
@@ -159,6 +197,15 @@ export default function Chat() {
             }
           } catch { /* ignore */ }
         }
+      }
+
+      // Save assistant response to database
+      if (user && assistantContent) {
+        await supabase.from('chat_messages').insert({
+          user_id: user.id,
+          role: 'assistant',
+          content: assistantContent,
+        });
       }
 
     } catch (error) {

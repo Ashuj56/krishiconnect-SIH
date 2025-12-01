@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 type ScanType = "pest" | "disease" | "nutrient" | "health";
 
@@ -31,6 +32,7 @@ export default function Scanner() {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const handleScan = async () => {
     if (!previewImage) return;
@@ -52,13 +54,30 @@ export default function Scanner() {
         throw new Error(data.error);
       }
 
-      setResult({
+      const scanResult: ScanResult = {
         confidence: data.confidence || 70,
         issue: data.issue || "Analysis Complete",
         severity: data.severity,
         description: data.description || "Analysis completed successfully.",
         recommendations: data.recommendations || ["No specific recommendations at this time."],
-      });
+      };
+
+      setResult(scanResult);
+
+      // Save scan result to database
+      if (user) {
+        await supabase.from('scan_results').insert({
+          user_id: user.id,
+          scan_type: selectedType,
+          confidence: scanResult.confidence,
+          result_data: {
+            issue: scanResult.issue,
+            severity: scanResult.severity,
+            description: scanResult.description,
+          },
+          recommendations: scanResult.recommendations,
+        });
+      }
     } catch (error) {
       console.error("Scan error:", error);
       toast({

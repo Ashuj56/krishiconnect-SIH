@@ -1,52 +1,118 @@
-import { useState } from "react";
-import { Leaf, Phone, ArrowRight, Globe } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Leaf, Mail, Lock, User, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+import { z } from "zod";
 
-type AuthStep = "phone" | "otp" | "language";
+const emailSchema = z.string().email("Please enter a valid email address");
+const passwordSchema = z.string().min(6, "Password must be at least 6 characters");
 
-const languages = [
-  { code: "ml", name: "Malayalam", native: "മലയാളം" },
-  { code: "en", name: "English", native: "English" },
-  { code: "hi", name: "Hindi", native: "हिन्दी" },
-];
+type AuthMode = "signin" | "signup";
 
 export default function Auth() {
-  const [step, setStep] = useState<AuthStep>("phone");
-  const [phone, setPhone] = useState("");
-  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
-  const [selectedLanguage, setSelectedLanguage] = useState("en");
+  const [mode, setMode] = useState<AuthMode>("signin");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState<{ email?: string; password?: string; fullName?: string }>({});
+  
   const navigate = useNavigate();
+  const location = useLocation();
+  const { signIn, signUp, user } = useAuth();
+  const { toast } = useToast();
 
-  const handleOtpChange = (index: number, value: string) => {
-    if (value.length > 1) return;
-    const newOtp = [...otp];
-    newOtp[index] = value;
-    setOtp(newOtp);
+  const from = (location.state as any)?.from?.pathname || "/";
 
-    // Auto-focus next input
-    if (value && index < 5) {
-      const nextInput = document.getElementById(`otp-${index + 1}`);
-      nextInput?.focus();
+  useEffect(() => {
+    if (user) {
+      navigate(from, { replace: true });
     }
+  }, [user, navigate, from]);
+
+  const validateForm = (): boolean => {
+    const newErrors: typeof errors = {};
+
+    try {
+      emailSchema.parse(email);
+    } catch (e) {
+      if (e instanceof z.ZodError) {
+        newErrors.email = e.errors[0].message;
+      }
+    }
+
+    try {
+      passwordSchema.parse(password);
+    } catch (e) {
+      if (e instanceof z.ZodError) {
+        newErrors.password = e.errors[0].message;
+      }
+    }
+
+    if (mode === "signup" && !fullName.trim()) {
+      newErrors.fullName = "Please enter your name";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmitPhone = () => {
-    if (phone.length >= 10) {
-      setStep("otp");
-    }
-  };
+  const handleSubmit = async () => {
+    if (!validateForm()) return;
 
-  const handleVerifyOtp = () => {
-    if (otp.join("").length === 6) {
-      setStep("language");
-    }
-  };
+    setIsLoading(true);
+    setErrors({});
 
-  const handleLanguageSelect = () => {
-    navigate("/");
+    try {
+      if (mode === "signin") {
+        const { error } = await signIn(email, password);
+        if (error) {
+          if (error.message.includes("Invalid login credentials")) {
+            toast({
+              title: "Login Failed",
+              description: "Invalid email or password. Please try again.",
+              variant: "destructive",
+            });
+          } else {
+            toast({
+              title: "Error",
+              description: error.message,
+              variant: "destructive",
+            });
+          }
+        }
+      } else {
+        const { error } = await signUp(email, password, fullName);
+        if (error) {
+          if (error.message.includes("already registered")) {
+            toast({
+              title: "Account Exists",
+              description: "This email is already registered. Please sign in instead.",
+              variant: "destructive",
+            });
+            setMode("signin");
+          } else {
+            toast({
+              title: "Error",
+              description: error.message,
+              variant: "destructive",
+            });
+          }
+        } else {
+          toast({
+            title: "Account Created",
+            description: "Welcome to FarmAssist! You're now signed in.",
+          });
+        }
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -62,106 +128,132 @@ export default function Auth() {
 
       {/* Auth Card */}
       <Card className="rounded-t-3xl rounded-b-none border-b-0 safe-bottom">
-        <CardHeader className="text-center">
+        <CardHeader className="text-center pb-2">
           <CardTitle>
-            {step === "phone" && "Enter Your Phone Number"}
-            {step === "otp" && "Verify OTP"}
-            {step === "language" && "Select Your Language"}
+            {mode === "signin" ? "Welcome Back" : "Create Account"}
           </CardTitle>
+          <p className="text-sm text-muted-foreground mt-1">
+            {mode === "signin" 
+              ? "Sign in to access your farm data" 
+              : "Join FarmAssist to save your data"}
+          </p>
         </CardHeader>
-        <CardContent className="pb-8">
-          {step === "phone" && (
-            <div className="space-y-4">
+        <CardContent className="pb-8 space-y-4">
+          {/* Mode Toggle */}
+          <div className="flex rounded-xl bg-muted p-1 mb-6">
+            <button
+              onClick={() => setMode("signin")}
+              className={cn(
+                "flex-1 py-2.5 rounded-lg text-sm font-medium transition-all",
+                mode === "signin" 
+                  ? "bg-card shadow-sm text-foreground" 
+                  : "text-muted-foreground"
+              )}
+            >
+              Sign In
+            </button>
+            <button
+              onClick={() => setMode("signup")}
+              className={cn(
+                "flex-1 py-2.5 rounded-lg text-sm font-medium transition-all",
+                mode === "signup" 
+                  ? "bg-card shadow-sm text-foreground" 
+                  : "text-muted-foreground"
+              )}
+            >
+              Sign Up
+            </button>
+          </div>
+
+          {/* Full Name (Sign Up only) */}
+          {mode === "signup" && (
+            <div className="space-y-1.5">
               <div className="relative">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-2 text-muted-foreground">
-                  <span className="text-lg">🇮🇳</span>
-                  <span className="font-medium">+91</span>
-                </div>
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                  placeholder="Enter phone number"
-                  className="w-full h-14 pl-24 pr-4 rounded-xl bg-muted border-0 focus:ring-2 focus:ring-primary/20 outline-none text-lg"
+                  type="text"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="Full name"
+                  className={cn(
+                    "w-full h-14 pl-12 pr-4 rounded-xl bg-muted border-2 border-transparent focus:ring-0 focus:border-primary/50 outline-none",
+                    errors.fullName && "border-destructive"
+                  )}
                 />
               </div>
-              <Button
-                size="xl"
-                className="w-full"
-                onClick={handleSubmitPhone}
-                disabled={phone.length < 10}
-              >
-                Continue
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </Button>
-              <p className="text-xs text-center text-muted-foreground">
-                By continuing, you agree to our Terms of Service and Privacy Policy
-              </p>
+              {errors.fullName && (
+                <p className="text-xs text-destructive pl-1">{errors.fullName}</p>
+              )}
             </div>
           )}
 
-          {step === "otp" && (
-            <div className="space-y-6">
-              <p className="text-sm text-center text-muted-foreground">
-                We've sent a 6-digit code to +91 {phone}
-              </p>
-              <div className="flex justify-center gap-2">
-                {otp.map((digit, index) => (
-                  <input
-                    key={index}
-                    id={`otp-${index}`}
-                    type="text"
-                    inputMode="numeric"
-                    value={digit}
-                    onChange={(e) => handleOtpChange(index, e.target.value)}
-                    className="w-12 h-14 text-center text-xl font-bold rounded-xl bg-muted border-0 focus:ring-2 focus:ring-primary/20 outline-none"
-                    maxLength={1}
-                  />
-                ))}
-              </div>
-              <Button
-                size="xl"
-                className="w-full"
-                onClick={handleVerifyOtp}
-                disabled={otp.join("").length < 6}
+          {/* Email */}
+          <div className="space-y-1.5">
+            <div className="relative">
+              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Email address"
+                className={cn(
+                  "w-full h-14 pl-12 pr-4 rounded-xl bg-muted border-2 border-transparent focus:ring-0 focus:border-primary/50 outline-none",
+                  errors.email && "border-destructive"
+                )}
+              />
+            </div>
+            {errors.email && (
+              <p className="text-xs text-destructive pl-1">{errors.email}</p>
+            )}
+          </div>
+
+          {/* Password */}
+          <div className="space-y-1.5">
+            <div className="relative">
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Password"
+                onKeyPress={(e) => e.key === "Enter" && handleSubmit()}
+                className={cn(
+                  "w-full h-14 pl-12 pr-12 rounded-xl bg-muted border-2 border-transparent focus:ring-0 focus:border-primary/50 outline-none",
+                  errors.password && "border-destructive"
+                )}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
-                Verify & Continue
-              </Button>
-              <button className="w-full text-sm text-primary font-medium">
-                Resend OTP
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
-          )}
+            {errors.password && (
+              <p className="text-xs text-destructive pl-1">{errors.password}</p>
+            )}
+          </div>
 
-          {step === "language" && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-center gap-2 mb-4 text-muted-foreground">
-                <Globe className="w-5 h-5" />
-                <span className="text-sm">Choose your preferred language</span>
-              </div>
-              <div className="space-y-3">
-                {languages.map((lang) => (
-                  <button
-                    key={lang.code}
-                    onClick={() => setSelectedLanguage(lang.code)}
-                    className={cn(
-                      "w-full p-4 rounded-xl border-2 text-left transition-all",
-                      selectedLanguage === lang.code
-                        ? "border-primary bg-primary/5"
-                        : "border-border hover:border-primary/50"
-                    )}
-                  >
-                    <p className="font-semibold">{lang.name}</p>
-                    <p className="text-sm text-muted-foreground">{lang.native}</p>
-                  </button>
-                ))}
-              </div>
-              <Button size="xl" className="w-full mt-4" onClick={handleLanguageSelect}>
-                Get Started
+          <Button
+            size="lg"
+            className="w-full h-14 text-base"
+            onClick={handleSubmit}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <div className="w-5 h-5 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <>
+                {mode === "signin" ? "Sign In" : "Create Account"}
                 <ArrowRight className="w-5 h-5 ml-2" />
-              </Button>
-            </div>
-          )}
+              </>
+            )}
+          </Button>
+
+          <p className="text-xs text-center text-muted-foreground pt-2">
+            By continuing, you agree to our Terms of Service and Privacy Policy
+          </p>
         </CardContent>
       </Card>
     </div>
