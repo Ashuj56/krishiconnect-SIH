@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 type ScanType = "pest" | "disease" | "nutrient" | "health";
 
@@ -17,6 +19,7 @@ const scanTypes = [
 interface ScanResult {
   confidence: number;
   issue: string;
+  severity?: string;
   description: string;
   recommendations: string[];
 }
@@ -27,29 +30,60 @@ export default function Scanner() {
   const [result, setResult] = useState<ScanResult | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
-  const handleScan = () => {
+  const handleScan = async () => {
+    if (!previewImage) return;
+    
     setIsScanning(true);
-    // Simulate scanning
-    setTimeout(() => {
-      setIsScanning(false);
-      setResult({
-        confidence: 87,
-        issue: "Leaf Spot Disease (Early Stage)",
-        description: "Detected early signs of Cercospora leaf spot on your banana plant. This fungal disease causes brown spots with yellow halos on leaves.",
-        recommendations: [
-          "Remove and destroy affected leaves",
-          "Apply copper-based fungicide",
-          "Improve air circulation between plants",
-          "Avoid overhead irrigation",
-        ],
+    setResult(null);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('analyze-crop', {
+        body: { 
+          image: previewImage,
+          scanType: selectedType 
+        }
       });
-    }, 2500);
+
+      if (error) throw error;
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      setResult({
+        confidence: data.confidence || 70,
+        issue: data.issue || "Analysis Complete",
+        severity: data.severity,
+        description: data.description || "Analysis completed successfully.",
+        recommendations: data.recommendations || ["No specific recommendations at this time."],
+      });
+    } catch (error) {
+      console.error("Scan error:", error);
+      toast({
+        title: "Analysis Failed",
+        description: error instanceof Error ? error.message : "Failed to analyze image. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsScanning(false);
+    }
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Check file size (max 4MB for base64)
+      if (file.size > 4 * 1024 * 1024) {
+        toast({
+          title: "File too large",
+          description: "Please upload an image smaller than 4MB.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const reader = new FileReader();
       reader.onload = () => {
         setPreviewImage(reader.result as string);
@@ -62,6 +96,15 @@ export default function Scanner() {
   const clearImage = () => {
     setPreviewImage(null);
     setResult(null);
+  };
+
+  const getSeverityColor = (severity?: string) => {
+    switch (severity?.toLowerCase()) {
+      case 'high': return 'bg-destructive/10 border-destructive/20 text-destructive';
+      case 'medium': return 'bg-warning/10 border-warning/20 text-warning';
+      case 'low': return 'bg-accent/10 border-accent/20 text-accent';
+      default: return 'bg-success/10 border-success/20 text-success';
+    }
   };
 
   return (
@@ -198,9 +241,12 @@ export default function Scanner() {
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="p-3 rounded-xl bg-warning/10 border border-warning/20">
-                <h4 className="font-semibold text-warning">{result.issue}</h4>
-                <p className="text-sm text-muted-foreground mt-1">{result.description}</p>
+              <div className={cn("p-3 rounded-xl border", getSeverityColor(result.severity))}>
+                <h4 className="font-semibold">{result.issue}</h4>
+                {result.severity && result.severity !== 'none' && (
+                  <p className="text-xs mt-1 opacity-80">Severity: {result.severity}</p>
+                )}
+                <p className="text-sm text-muted-foreground mt-2">{result.description}</p>
               </div>
 
               <div>
@@ -218,10 +264,10 @@ export default function Scanner() {
               </div>
 
               <div className="flex gap-2 pt-2">
-                <Button variant="outline" className="flex-1">
-                  Save Report
+                <Button variant="outline" className="flex-1" onClick={clearImage}>
+                  Scan Another
                 </Button>
-                <Button className="flex-1">
+                <Button className="flex-1" onClick={() => navigate('/chat')}>
                   Ask AI for More Help
                 </Button>
               </div>
