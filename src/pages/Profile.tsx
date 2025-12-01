@@ -1,27 +1,18 @@
-import { User, Phone, Mail, MapPin, Edit2, Camera, LogOut, ChevronRight, Award } from "lucide-react";
+import { useState, useEffect } from "react";
+import { User, Phone, Mail, MapPin, Edit2, Camera, LogOut, ChevronRight, Award, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
-interface UserProfile {
-  name: string;
-  phone: string;
-  email: string;
-  location: string;
-  memberSince: string;
-  farmSize: string;
-  language: string;
+interface ProfileData {
+  full_name: string | null;
+  phone: string | null;
+  location: string | null;
+  avatar_url: string | null;
 }
-
-const userProfile: UserProfile = {
-  name: "Rajesh Kumar",
-  phone: "+91 98765 43210",
-  email: "rajesh.kumar@email.com",
-  location: "Thrissur, Kerala",
-  memberSince: "March 2024",
-  farmSize: "6.5 acres",
-  language: "Malayalam",
-};
 
 const achievements = [
   { icon: "🌾", title: "First Harvest Logged", date: "Apr 2024" },
@@ -31,6 +22,63 @@ const achievements = [
 
 export default function Profile() {
   const navigate = useNavigate();
+  const { user, signOut } = useAuth();
+  const { toast } = useToast();
+  const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [signingOut, setSigningOut] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const loadProfile = async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('full_name, phone, location, avatar_url')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (data) {
+        setProfile(data);
+      }
+      setLoading(false);
+    };
+
+    loadProfile();
+  }, [user]);
+
+  const handleSignOut = async () => {
+    setSigningOut(true);
+    try {
+      await signOut();
+      toast({
+        title: "Signed out",
+        description: "You have been signed out successfully.",
+      });
+      navigate("/auth");
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to sign out. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSigningOut(false);
+    }
+  };
+
+  const displayName = profile?.full_name || user?.email?.split('@')[0] || 'Farmer';
+  const memberSince = user?.created_at 
+    ? new Date(user.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+    : 'New Member';
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -58,22 +106,22 @@ export default function Profile() {
                   <Camera className="w-4 h-4" />
                 </button>
               </div>
-              <h2 className="text-xl font-bold mt-4">{userProfile.name}</h2>
-              <p className="text-sm text-muted-foreground">Member since {userProfile.memberSince}</p>
+              <h2 className="text-xl font-bold mt-4">{displayName}</h2>
+              <p className="text-sm text-muted-foreground">Member since {memberSince}</p>
               
               <div className="flex gap-4 mt-4 text-center">
                 <div>
-                  <p className="text-2xl font-bold text-primary">{userProfile.farmSize}</p>
+                  <p className="text-2xl font-bold text-primary">--</p>
                   <p className="text-xs text-muted-foreground">Farm Size</p>
                 </div>
                 <div className="w-px bg-border" />
                 <div>
-                  <p className="text-2xl font-bold text-primary">4</p>
+                  <p className="text-2xl font-bold text-primary">0</p>
                   <p className="text-xs text-muted-foreground">Active Crops</p>
                 </div>
                 <div className="w-px bg-border" />
                 <div>
-                  <p className="text-2xl font-bold text-primary">127</p>
+                  <p className="text-2xl font-bold text-primary">0</p>
                   <p className="text-xs text-muted-foreground">Activities</p>
                 </div>
               </div>
@@ -93,7 +141,7 @@ export default function Profile() {
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Phone</p>
-                <p className="font-medium">{userProfile.phone}</p>
+                <p className="font-medium">{profile?.phone || 'Not set'}</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -102,7 +150,7 @@ export default function Profile() {
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Email</p>
-                <p className="font-medium">{userProfile.email}</p>
+                <p className="font-medium">{user?.email || 'Not set'}</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -111,7 +159,7 @@ export default function Profile() {
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Location</p>
-                <p className="font-medium">{userProfile.location}</p>
+                <p className="font-medium">{profile?.location || 'Not set'}</p>
               </div>
             </div>
           </CardContent>
@@ -147,7 +195,6 @@ export default function Profile() {
             {[
               { label: "View Farm Profile", path: "/farm" },
               { label: "Settings", path: "/settings" },
-              { label: "Help & Support", path: "/help" },
             ].map((link, index) => (
               <button
                 key={index}
@@ -162,8 +209,17 @@ export default function Profile() {
         </Card>
 
         {/* Logout Button */}
-        <Button variant="outline" className="w-full text-destructive hover:text-destructive hover:bg-destructive/10">
-          <LogOut className="w-4 h-4 mr-2" />
+        <Button 
+          variant="outline" 
+          className="w-full text-destructive hover:text-destructive hover:bg-destructive/10"
+          onClick={handleSignOut}
+          disabled={signingOut}
+        >
+          {signingOut ? (
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+          ) : (
+            <LogOut className="w-4 h-4 mr-2" />
+          )}
           Sign Out
         </Button>
       </div>
