@@ -14,7 +14,305 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      activities: {
+        Row: {
+          activity_date: string
+          activity_type: string
+          cost: number | null
+          created_at: string | null
+          crop_id: string | null
+          description: string | null
+          id: string
+          photo_url: string | null
+          quantity: number | null
+          quantity_unit: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          activity_date?: string
+          activity_type: string
+          cost?: number | null
+          created_at?: string | null
+          crop_id?: string | null
+          description?: string | null
+          id?: string
+          photo_url?: string | null
+          quantity?: number | null
+          quantity_unit?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          activity_date?: string
+          activity_type?: string
+          cost?: number | null
+          created_at?: string | null
+          crop_id?: string | null
+          description?: string | null
+          id?: string
+          photo_url?: string | null
+          quantity?: number | null
+          quantity_unit?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activities_crop_id_fkey"
+            columns: ["crop_id"]
+            isOneToOne: false
+            referencedRelation: "crops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_messages: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      crops: {
+        Row: {
+          area: number | null
+          area_unit: string | null
+          created_at: string | null
+          current_stage: string | null
+          expected_harvest_date: string | null
+          farm_id: string
+          health_status: string | null
+          id: string
+          name: string
+          notes: string | null
+          planting_date: string | null
+          updated_at: string | null
+          user_id: string
+          variety: string | null
+        }
+        Insert: {
+          area?: number | null
+          area_unit?: string | null
+          created_at?: string | null
+          current_stage?: string | null
+          expected_harvest_date?: string | null
+          farm_id: string
+          health_status?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          planting_date?: string | null
+          updated_at?: string | null
+          user_id: string
+          variety?: string | null
+        }
+        Update: {
+          area?: number | null
+          area_unit?: string | null
+          created_at?: string | null
+          current_stage?: string | null
+          expected_harvest_date?: string | null
+          farm_id?: string
+          health_status?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          planting_date?: string | null
+          updated_at?: string | null
+          user_id?: string
+          variety?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crops_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      farms: {
+        Row: {
+          area_unit: string | null
+          created_at: string | null
+          id: string
+          location: string | null
+          name: string
+          soil_type: string | null
+          total_area: number | null
+          updated_at: string | null
+          user_id: string
+          water_source: string | null
+        }
+        Insert: {
+          area_unit?: string | null
+          created_at?: string | null
+          id?: string
+          location?: string | null
+          name: string
+          soil_type?: string | null
+          total_area?: number | null
+          updated_at?: string | null
+          user_id: string
+          water_source?: string | null
+        }
+        Update: {
+          area_unit?: string | null
+          created_at?: string | null
+          id?: string
+          location?: string | null
+          name?: string
+          soil_type?: string | null
+          total_area?: number | null
+          updated_at?: string | null
+          user_id?: string
+          water_source?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          full_name: string | null
+          id: string
+          language: string | null
+          location: string | null
+          phone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id: string
+          language?: string | null
+          location?: string | null
+          phone?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: string
+          language?: string | null
+          location?: string | null
+          phone?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      scan_results: {
+        Row: {
+          confidence: number | null
+          created_at: string | null
+          crop_id: string | null
+          id: string
+          image_url: string | null
+          recommendations: string[] | null
+          result_data: Json | null
+          scan_type: string
+          user_id: string
+        }
+        Insert: {
+          confidence?: number | null
+          created_at?: string | null
+          crop_id?: string | null
+          id?: string
+          image_url?: string | null
+          recommendations?: string[] | null
+          result_data?: Json | null
+          scan_type: string
+          user_id: string
+        }
+        Update: {
+          confidence?: number | null
+          created_at?: string | null
+          crop_id?: string | null
+          id?: string
+          image_url?: string | null
+          recommendations?: string[] | null
+          result_data?: Json | null
+          scan_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scan_results_crop_id_fkey"
+            columns: ["crop_id"]
+            isOneToOne: false
+            referencedRelation: "crops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tasks: {
+        Row: {
+          completed: boolean | null
+          created_at: string | null
+          crop_id: string | null
+          description: string | null
+          id: string
+          priority: string | null
+          scheduled_date: string | null
+          scheduled_time: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean | null
+          created_at?: string | null
+          crop_id?: string | null
+          description?: string | null
+          id?: string
+          priority?: string | null
+          scheduled_date?: string | null
+          scheduled_time?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          completed?: boolean | null
+          created_at?: string | null
+          crop_id?: string | null
+          description?: string | null
+          id?: string
+          priority?: string | null
+          scheduled_date?: string | null
+          scheduled_time?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_crop_id_fkey"
+            columns: ["crop_id"]
+            isOneToOne: false
+            referencedRelation: "crops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
