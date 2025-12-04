@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Mic, Leaf, Image, MoreVertical, ChevronLeft } from "lucide-react";
+import { Send, Mic, MicOff, Volume2, VolumeX, Leaf, Image, MoreVertical, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useSpeech } from "@/hooks/useSpeech";
 
 interface Message {
   id: string;
@@ -32,14 +33,40 @@ const initialMessages: Message[] = [
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
 
+// Language mapping for speech
+const SPEECH_LANGUAGES: Record<string, string> = {
+  'ml': 'ml-IN', // Malayalam
+  'en': 'en-IN', // English (India)
+  'hi': 'hi-IN', // Hindi
+};
+
 export default function Chat() {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [voiceEnabled, setVoiceEnabled] = useState(true);
+  const [currentLang, setCurrentLang] = useState('en-IN');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
+
+  // Speech hook for voice input/output
+  const { 
+    isListening, 
+    isSpeaking, 
+    transcript,
+    isSupported,
+    startListening, 
+    stopListening, 
+    speak, 
+    stopSpeaking 
+  } = useSpeech({
+    language: currentLang,
+    onTranscript: (text) => {
+      setInput(text);
+    },
+  });
 
   // Load chat history on mount
   useEffect(() => {
@@ -199,13 +226,18 @@ export default function Chat() {
         }
       }
 
-      // Save assistant response to database
+      // Save assistant response to database and speak it
       if (user && assistantContent) {
         await supabase.from('chat_messages').insert({
           user_id: user.id,
           role: 'assistant',
           content: assistantContent,
         });
+      }
+
+      // Speak the response if voice is enabled
+      if (voiceEnabled && assistantContent) {
+        speak(assistantContent, currentLang);
       }
 
     } catch (error) {
@@ -219,6 +251,15 @@ export default function Chat() {
       setMessages(prev => prev.filter(m => m.content !== ""));
     } finally {
       setIsTyping(false);
+    }
+  };
+
+  // Handle voice input toggle
+  const handleVoiceInput = () => {
+    if (isListening) {
+      stopListening();
+    } else {
+      startListening();
     }
   };
 
@@ -242,9 +283,23 @@ export default function Chat() {
               </p>
             </div>
           </div>
-          <Button variant="ghost" size="icon">
-            <MoreVertical className="w-5 h-5" />
-          </Button>
+          <div className="flex items-center gap-1">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => {
+                setVoiceEnabled(!voiceEnabled);
+                if (isSpeaking) stopSpeaking();
+              }}
+              className={cn(!voiceEnabled && "text-muted-foreground")}
+              title={voiceEnabled ? "Disable voice responses" : "Enable voice responses"}
+            >
+              {voiceEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
+            </Button>
+            <Button variant="ghost" size="icon">
+              <MoreVertical className="w-5 h-5" />
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -319,6 +374,38 @@ export default function Chat() {
         </div>
       )}
 
+      {/* Listening Indicator */}
+      {isListening && (
+        <div className="px-4 pb-2">
+          <div className="flex items-center gap-2 text-primary">
+            <div className="flex gap-1">
+              <span className="w-2 h-2 bg-primary rounded-full animate-pulse" />
+              <span className="w-2 h-2 bg-primary rounded-full animate-pulse" style={{ animationDelay: "150ms" }} />
+              <span className="w-2 h-2 bg-primary rounded-full animate-pulse" style={{ animationDelay: "300ms" }} />
+            </div>
+            <span className="text-sm">Listening... {transcript && `"${transcript}"`}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Speaking Indicator */}
+      {isSpeaking && (
+        <div className="px-4 pb-2">
+          <div className="flex items-center gap-2 text-success">
+            <Volume2 className="w-4 h-4 animate-pulse" />
+            <span className="text-sm">Speaking...</span>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={stopSpeaking}
+              className="h-6 text-xs"
+            >
+              Stop
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Input Area */}
       <div className="sticky bottom-16 md:bottom-0 bg-card border-t border-border p-4 safe-bottom">
         <div className="flex items-center gap-2">
@@ -331,16 +418,22 @@ export default function Chat() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyPress={(e) => e.key === "Enter" && handleSend()}
-              placeholder="Ask about your crops..."
+              placeholder={isListening ? "Listening..." : "Ask about your crops..."}
               className="w-full h-11 px-4 pr-12 rounded-full bg-muted border-0 focus:ring-2 focus:ring-primary/20 outline-none text-sm"
-              disabled={isTyping}
+              disabled={isTyping || isListening}
             />
             <Button
               variant="ghost"
               size="icon"
-              className="absolute right-1 top-1/2 -translate-y-1/2"
+              onClick={handleVoiceInput}
+              disabled={!isSupported}
+              className={cn(
+                "absolute right-1 top-1/2 -translate-y-1/2",
+                isListening && "bg-primary text-primary-foreground hover:bg-primary/90"
+              )}
+              title={isListening ? "Stop listening" : "Start voice input"}
             >
-              <Mic className="w-5 h-5 text-primary" />
+              {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5 text-primary" />}
             </Button>
           </div>
           <Button
