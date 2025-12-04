@@ -1,32 +1,182 @@
-import { MapPin, Droplets, Thermometer, Edit2, Plus, Leaf, Mountain } from "lucide-react";
+import { useState, useEffect } from "react";
+import { MapPin, Droplets, Edit2, Plus, Leaf, Mountain, Save, X, Loader2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
-interface FarmData {
+interface Farm {
+  id: string;
   name: string;
-  location: string;
-  totalArea: string;
-  soilType: string;
-  waterSource: string;
-  crops: { name: string; area: string; status: string }[];
+  location: string | null;
+  total_area: number | null;
+  area_unit: string | null;
+  soil_type: string | null;
+  water_source: string | null;
 }
 
-const farmData: FarmData = {
-  name: "Kumar Farm",
-  location: "Thrissur, Kerala",
-  totalArea: "6.5 acres",
-  soilType: "Alluvial Soil",
-  waterSource: "Well + Canal",
-  crops: [
-    { name: "Rice (Paddy)", area: "2 acres", status: "Flowering" },
-    { name: "Banana", area: "1 acre", status: "Fruiting" },
-    { name: "Coconut", area: "3 acres", status: "Mature" },
-    { name: "Vegetables", area: "0.5 acres", status: "Growing" },
-  ],
-};
+interface Crop {
+  id: string;
+  name: string;
+  variety: string | null;
+  area: number | null;
+  area_unit: string | null;
+  current_stage: string | null;
+  health_status: string | null;
+}
+
+const soilTypes = ["Alluvial", "Black/Clay", "Red", "Laterite", "Sandy", "Loamy"];
+const waterSources = ["Well", "Canal", "Borewell", "River", "Rainwater", "Mixed"];
+const cropStages = ["Seedling", "Growing", "Flowering", "Fruiting", "Mature", "Harvesting"];
 
 export default function FarmProfile() {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [farm, setFarm] = useState<Farm | null>(null);
+  const [crops, setCrops] = useState<Crop[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState<Partial<Farm>>({});
+  const [isSaving, setIsSaving] = useState(false);
+  const [showAddCrop, setShowAddCrop] = useState(false);
+  const [newCrop, setNewCrop] = useState({ name: "", variety: "", area: "", stage: "", health: "good" });
+
+  useEffect(() => {
+    if (user) {
+      fetchFarmData();
+    }
+  }, [user]);
+
+  const fetchFarmData = async () => {
+    if (!user) return;
+
+    try {
+      // Fetch farm
+      const { data: farmData } = await supabase
+        .from("farms")
+        .select("*")
+        .eq("user_id", user.id)
+        .single();
+
+      if (farmData) {
+        setFarm(farmData);
+        setEditForm(farmData);
+
+        // Fetch crops for this farm
+        const { data: cropsData } = await supabase
+          .from("crops")
+          .select("*")
+          .eq("farm_id", farmData.id);
+
+        if (cropsData) {
+          setCrops(cropsData);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching farm data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSaveFarm = async () => {
+    if (!farm) return;
+
+    setIsSaving(true);
+    try {
+      const { error } = await supabase
+        .from("farms")
+        .update({
+          name: editForm.name,
+          location: editForm.location,
+          total_area: editForm.total_area,
+          soil_type: editForm.soil_type,
+          water_source: editForm.water_source,
+        })
+        .eq("id", farm.id);
+
+      if (error) throw error;
+
+      setFarm({ ...farm, ...editForm });
+      setIsEditing(false);
+      toast({ title: "Farm updated successfully" });
+    } catch (error) {
+      toast({ title: "Error updating farm", variant: "destructive" });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleAddCrop = async () => {
+    if (!farm || !newCrop.name) return;
+
+    try {
+      const { data, error } = await supabase
+        .from("crops")
+        .insert({
+          user_id: user!.id,
+          farm_id: farm.id,
+          name: newCrop.name,
+          variety: newCrop.variety || null,
+          area: newCrop.area ? parseFloat(newCrop.area) : null,
+          area_unit: "acres",
+          current_stage: newCrop.stage || null,
+          health_status: newCrop.health,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setCrops([...crops, data]);
+      setShowAddCrop(false);
+      setNewCrop({ name: "", variety: "", area: "", stage: "", health: "good" });
+      toast({ title: "Crop added successfully" });
+    } catch (error) {
+      toast({ title: "Error adding crop", variant: "destructive" });
+    }
+  };
+
+  const handleDeleteCrop = async (cropId: string) => {
+    try {
+      const { error } = await supabase
+        .from("crops")
+        .delete()
+        .eq("id", cropId);
+
+      if (error) throw error;
+
+      setCrops(crops.filter(c => c.id !== cropId));
+      toast({ title: "Crop deleted" });
+    } catch (error) {
+      toast({ title: "Error deleting crop", variant: "destructive" });
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!farm) {
+    return (
+      <div className="min-h-screen bg-background p-4">
+        <Card className="p-8 text-center">
+          <Leaf className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+          <h2 className="text-xl font-semibold mb-2">No Farm Found</h2>
+          <p className="text-muted-foreground mb-4">Create your farm profile to get started</p>
+          <Button onClick={() => setIsEditing(true)}>Create Farm Profile</Button>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -36,10 +186,22 @@ export default function FarmProfile() {
             <h1 className="text-xl font-bold">Farm Profile</h1>
             <p className="text-xs text-muted-foreground">Manage your farm details</p>
           </div>
-          <Button variant="outline" size="sm">
-            <Edit2 className="w-4 h-4 mr-2" />
-            Edit
-          </Button>
+          {isEditing ? (
+            <div className="flex gap-2">
+              <Button variant="ghost" size="sm" onClick={() => { setIsEditing(false); setEditForm(farm); }}>
+                <X className="w-4 h-4" />
+              </Button>
+              <Button size="sm" onClick={handleSaveFarm} disabled={isSaving}>
+                {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4 mr-1" />}
+                Save
+              </Button>
+            </div>
+          ) : (
+            <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+              <Edit2 className="w-4 h-4 mr-2" />
+              Edit
+            </Button>
+          )}
         </div>
       </header>
 
@@ -49,15 +211,43 @@ export default function FarmProfile() {
           <div className="gradient-primary p-6 text-primary-foreground">
             <div className="flex items-start justify-between">
               <div>
-                <h2 className="text-2xl font-bold">{farmData.name}</h2>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    value={editForm.name || ""}
+                    onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                    className="text-2xl font-bold bg-transparent border-b border-primary-foreground/50 outline-none w-full"
+                  />
+                ) : (
+                  <h2 className="text-2xl font-bold">{farm.name}</h2>
+                )}
                 <div className="flex items-center gap-1 mt-1 opacity-90">
                   <MapPin className="w-4 h-4" />
-                  <span className="text-sm">{farmData.location}</span>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      value={editForm.location || ""}
+                      onChange={(e) => setEditForm({ ...editForm, location: e.target.value })}
+                      className="text-sm bg-transparent border-b border-primary-foreground/50 outline-none"
+                      placeholder="Enter location"
+                    />
+                  ) : (
+                    <span className="text-sm">{farm.location || "No location set"}</span>
+                  )}
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-3xl font-bold">{farmData.totalArea}</p>
-                <p className="text-sm opacity-80">Total Area</p>
+                {isEditing ? (
+                  <input
+                    type="number"
+                    value={editForm.total_area || ""}
+                    onChange={(e) => setEditForm({ ...editForm, total_area: parseFloat(e.target.value) })}
+                    className="text-3xl font-bold bg-transparent border-b border-primary-foreground/50 outline-none w-24 text-right"
+                  />
+                ) : (
+                  <p className="text-3xl font-bold">{farm.total_area || 0}</p>
+                )}
+                <p className="text-sm opacity-80">{farm.area_unit || "acres"}</p>
               </div>
             </div>
           </div>
@@ -67,18 +257,44 @@ export default function FarmProfile() {
                 <div className="w-10 h-10 rounded-lg bg-soil/10 flex items-center justify-center">
                   <Mountain className="w-5 h-5 text-soil" />
                 </div>
-                <div>
+                <div className="flex-1">
                   <p className="text-xs text-muted-foreground">Soil Type</p>
-                  <p className="font-medium text-sm">{farmData.soilType}</p>
+                  {isEditing ? (
+                    <select
+                      value={editForm.soil_type || ""}
+                      onChange={(e) => setEditForm({ ...editForm, soil_type: e.target.value })}
+                      className="font-medium text-sm bg-transparent outline-none w-full"
+                    >
+                      <option value="">Select</option>
+                      {soilTypes.map((type) => (
+                        <option key={type} value={type}>{type}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <p className="font-medium text-sm">{farm.soil_type || "Not set"}</p>
+                  )}
                 </div>
               </div>
               <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/50">
                 <div className="w-10 h-10 rounded-lg bg-water/10 flex items-center justify-center">
                   <Droplets className="w-5 h-5 text-water" />
                 </div>
-                <div>
+                <div className="flex-1">
                   <p className="text-xs text-muted-foreground">Water Source</p>
-                  <p className="font-medium text-sm">{farmData.waterSource}</p>
+                  {isEditing ? (
+                    <select
+                      value={editForm.water_source || ""}
+                      onChange={(e) => setEditForm({ ...editForm, water_source: e.target.value })}
+                      className="font-medium text-sm bg-transparent outline-none w-full"
+                    >
+                      <option value="">Select</option>
+                      {waterSources.map((source) => (
+                        <option key={source} value={source}>{source}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <p className="font-medium text-sm">{farm.water_source || "Not set"}</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -93,72 +309,99 @@ export default function FarmProfile() {
                 <Leaf className="w-5 h-5 text-primary" />
                 My Crops
               </CardTitle>
-              <Button variant="ghost" size="sm">
-                <Plus className="w-4 h-4 mr-1" />
-                Add
-              </Button>
+              <Dialog open={showAddCrop} onOpenChange={setShowAddCrop}>
+                <DialogTrigger asChild>
+                  <Button variant="ghost" size="sm">
+                    <Plus className="w-4 h-4 mr-1" />
+                    Add
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Add New Crop</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 mt-4">
+                    <input
+                      type="text"
+                      placeholder="Crop name (e.g., Rice, Banana)"
+                      value={newCrop.name}
+                      onChange={(e) => setNewCrop({ ...newCrop, name: e.target.value })}
+                      className="w-full h-12 px-4 rounded-xl bg-muted border-2 border-transparent focus:border-primary/50 outline-none"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Variety (optional)"
+                      value={newCrop.variety}
+                      onChange={(e) => setNewCrop({ ...newCrop, variety: e.target.value })}
+                      className="w-full h-12 px-4 rounded-xl bg-muted border-2 border-transparent focus:border-primary/50 outline-none"
+                    />
+                    <input
+                      type="number"
+                      placeholder="Area in acres"
+                      value={newCrop.area}
+                      onChange={(e) => setNewCrop({ ...newCrop, area: e.target.value })}
+                      className="w-full h-12 px-4 rounded-xl bg-muted border-2 border-transparent focus:border-primary/50 outline-none"
+                    />
+                    <select
+                      value={newCrop.stage}
+                      onChange={(e) => setNewCrop({ ...newCrop, stage: e.target.value })}
+                      className="w-full h-12 px-4 rounded-xl bg-muted border-2 border-transparent focus:border-primary/50 outline-none"
+                    >
+                      <option value="">Select growth stage</option>
+                      {cropStages.map((stage) => (
+                        <option key={stage} value={stage}>{stage}</option>
+                      ))}
+                    </select>
+                    <Button className="w-full" onClick={handleAddCrop}>
+                      Add Crop
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
           </CardHeader>
           <CardContent className="space-y-3">
-            {farmData.crops.map((crop, index) => (
-              <div
-                key={index}
-                className="p-4 rounded-xl border bg-card hover:shadow-card transition-all"
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <div>
-                    <h4 className="font-medium">{crop.name}</h4>
-                    <p className="text-sm text-muted-foreground">{crop.area}</p>
+            {crops.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <Leaf className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                <p>No crops added yet</p>
+              </div>
+            ) : (
+              crops.map((crop) => (
+                <div
+                  key={crop.id}
+                  className="p-4 rounded-xl border bg-card hover:shadow-card transition-all"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-medium">{crop.name}</h4>
+                      <p className="text-sm text-muted-foreground">
+                        {crop.area ? `${crop.area} ${crop.area_unit || "acres"}` : "Area not set"}
+                        {crop.variety && ` • ${crop.variety}`}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={cn(
+                        "text-xs px-3 py-1 rounded-full font-medium",
+                        crop.health_status === "good" && "bg-crop-green/10 text-crop-green",
+                        crop.health_status === "moderate" && "bg-harvest-gold/10 text-harvest-gold",
+                        crop.health_status === "poor" && "bg-destructive/10 text-destructive"
+                      )}>
+                        {crop.current_stage || "Growing"}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                        onClick={() => handleDeleteCrop(crop.id)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
-                  <span className="text-xs px-3 py-1 rounded-full bg-primary/10 text-primary font-medium">
-                    {crop.status}
-                  </span>
                 </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-
-        {/* Soil Health Card */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2">
-              <Thermometer className="w-5 h-5 text-primary" />
-              Soil Health Indicators
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span>Nitrogen (N)</span>
-                <span className="font-medium">Good</span>
-              </div>
-              <Progress value={75} className="h-2" />
-            </div>
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span>Phosphorus (P)</span>
-                <span className="font-medium">Moderate</span>
-              </div>
-              <Progress value={55} className="h-2" />
-            </div>
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span>Potassium (K)</span>
-                <span className="font-medium">Good</span>
-              </div>
-              <Progress value={80} className="h-2" />
-            </div>
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span>pH Level</span>
-                <span className="font-medium">6.5 (Optimal)</span>
-              </div>
-              <Progress value={65} className="h-2" />
-            </div>
-            <Button variant="outline" className="w-full mt-2">
-              Request Soil Test
-            </Button>
+              ))
+            )}
           </CardContent>
         </Card>
       </div>
