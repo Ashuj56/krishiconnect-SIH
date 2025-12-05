@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Send, Mic, MicOff, Volume2, VolumeX, Leaf, Image, MoreVertical, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -13,6 +13,33 @@ interface Message {
   type: "user" | "assistant";
   content: string;
   timestamp: Date;
+}
+
+interface FarmerContext {
+  farmerName?: string;
+  location?: string;
+  farm?: {
+    name: string;
+    total_area: number | null;
+    area_unit: string | null;
+    soil_type: string | null;
+    water_source: string | null;
+  };
+  crops?: Array<{
+    name: string;
+    variety: string | null;
+    area: number | null;
+    area_unit: string | null;
+    current_stage: string | null;
+    health_status: string | null;
+    planting_date: string | null;
+  }>;
+  recentActivities?: Array<{
+    title: string;
+    activity_type: string;
+    activity_date: string;
+    description: string | null;
+  }>;
 }
 
 const quickQuestions = [
@@ -34,10 +61,10 @@ const initialMessages: Message[] = [
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
 
 // Language mapping for speech
-const SPEECH_LANGUAGES: Record<string, string> = {
-  'ml': 'ml-IN', // Malayalam
-  'en': 'en-IN', // English (India)
-  'hi': 'hi-IN', // Hindi
+const SPEECH_LANGUAGES: Record<string, { speech: string; label: string }> = {
+  'en': { speech: 'en-IN', label: 'English' },
+  'hi': { speech: 'hi-IN', label: 'हिंदी' },
+  'ml': { speech: 'ml-IN', label: 'മലയാളം' },
 };
 
 export default function Chat() {
@@ -45,75 +72,26 @@ export default function Chat() {
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [voiceEnabled, setVoiceEnabled] = useState(true);
-  const [currentLang, setCurrentLang] = useState('en-IN');
+  const [currentLang, setCurrentLang] = useState('en');
+  const [farmerContext, setFarmerContext] = useState<FarmerContext | null>(null);
+  const [isLoadingContext, setIsLoadingContext] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
 
-  // Speech hook for voice input/output
-  const { 
-    isListening, 
-    isSpeaking, 
-    transcript,
-    isSupported,
-    startListening, 
-    stopListening, 
-    speak, 
-    stopSpeaking 
-  } = useSpeech({
-    language: currentLang,
-    onTranscript: (text) => {
-      setInput(text);
-    },
-  });
-
-  // Load chat history on mount
-  useEffect(() => {
-    if (!user) return;
-    
-    const loadHistory = async () => {
-      const { data, error } = await supabase
-        .from('chat_messages')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: true })
-        .limit(50);
-
-      if (data && data.length > 0) {
-        const loadedMessages: Message[] = data.map(msg => ({
-          id: msg.id,
-          type: msg.role as "user" | "assistant",
-          content: msg.content,
-          timestamp: new Date(msg.created_at!),
-        }));
-        setMessages([initialMessages[0], ...loadedMessages]);
-      }
-    };
-
-    loadHistory();
-  }, [user]);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const handleSend = async () => {
-    if (!input.trim() || isTyping) return;
+  // Handle sending message - defined before useSpeech so we can use it in onTranscript
+  const handleSendMessage = useCallback(async (messageText: string) => {
+    if (!messageText.trim() || isTyping) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
       type: "user",
-      content: input,
+      content: messageText,
       timestamp: new Date(),
     };
 
     setMessages((prev) => [...prev, userMessage]);
-    const userInput = input;
     setInput("");
     setIsTyping(true);
 
@@ -123,18 +101,18 @@ export default function Chat() {
         await supabase.from('chat_messages').insert({
           user_id: user.id,
           role: 'user',
-          content: userInput,
+          content: messageText,
         });
       }
 
       const chatMessages = messages
-        .filter(m => m.id !== "1") // Exclude the initial greeting
+        .filter(m => m.id !== "1")
         .map(m => ({
           role: m.type === "user" ? "user" : "assistant",
           content: m.content
         }));
       
-      chatMessages.push({ role: "user", content: userInput });
+      chatMessages.push({ role: "user", content: messageText });
 
       const resp = await fetch(CHAT_URL, {
         method: "POST",
@@ -142,7 +120,10 @@ export default function Chat() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
-        body: JSON.stringify({ messages: chatMessages }),
+        body: JSON.stringify({ 
+          messages: chatMessages,
+          farmerContext: farmerContext 
+        }),
       });
 
       if (!resp.ok) {
@@ -157,7 +138,6 @@ export default function Chat() {
       let textBuffer = "";
       let assistantContent = "";
 
-      // Create assistant message placeholder
       const assistantId = (Date.now() + 1).toString();
       setMessages(prev => [...prev, {
         id: assistantId,
@@ -226,7 +206,7 @@ export default function Chat() {
         }
       }
 
-      // Save assistant response to database and speak it
+      // Save assistant response to database
       if (user && assistantContent) {
         await supabase.from('chat_messages').insert({
           user_id: user.id,
@@ -237,9 +217,10 @@ export default function Chat() {
 
       // Speak the response if voice is enabled
       if (voiceEnabled && assistantContent) {
-        speak(assistantContent, currentLang);
+        speak(assistantContent, SPEECH_LANGUAGES[currentLang]?.speech || 'en-IN');
       }
 
+      return assistantContent;
     } catch (error) {
       console.error("Chat error:", error);
       toast({
@@ -247,11 +228,150 @@ export default function Chat() {
         description: error instanceof Error ? error.message : "Failed to get response. Please try again.",
         variant: "destructive",
       });
-      // Remove empty assistant message if there was an error
       setMessages(prev => prev.filter(m => m.content !== ""));
+      return null;
     } finally {
       setIsTyping(false);
     }
+  }, [messages, isTyping, user, farmerContext, voiceEnabled, currentLang, toast]);
+
+  // Speech hook for voice input/output
+  const { 
+    isListening, 
+    isSpeaking, 
+    transcript,
+    isSupported,
+    startListening, 
+    stopListening, 
+    speak, 
+    stopSpeaking 
+  } = useSpeech({
+    language: SPEECH_LANGUAGES[currentLang]?.speech || 'en-IN',
+    onTranscript: (text) => {
+      // Auto-send when voice input is final
+      if (text.trim()) {
+        handleSendMessage(text);
+      }
+    },
+  });
+
+  // Load farmer context (profile, farm, crops, activities)
+  useEffect(() => {
+    if (!user) {
+      setIsLoadingContext(false);
+      return;
+    }
+
+    const loadFarmerContext = async () => {
+      try {
+        // Fetch profile
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('full_name, location, language')
+          .eq('id', user.id)
+          .single();
+
+        // Set language from profile
+        if (profile?.language && SPEECH_LANGUAGES[profile.language]) {
+          setCurrentLang(profile.language);
+        }
+
+        // Fetch farm
+        const { data: farms } = await supabase
+          .from('farms')
+          .select('*')
+          .eq('user_id', user.id)
+          .limit(1);
+        
+        const farm = farms?.[0];
+
+        // Fetch crops
+        const { data: crops } = await supabase
+          .from('crops')
+          .select('name, variety, area, area_unit, current_stage, health_status, planting_date')
+          .eq('user_id', user.id);
+
+        // Fetch recent activities (last 7 days)
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        
+        const { data: activities } = await supabase
+          .from('activities')
+          .select('title, activity_type, activity_date, description')
+          .eq('user_id', user.id)
+          .gte('activity_date', sevenDaysAgo.toISOString().split('T')[0])
+          .order('activity_date', { ascending: false })
+          .limit(10);
+
+        setFarmerContext({
+          farmerName: profile?.full_name || undefined,
+          location: profile?.location || farm?.location || undefined,
+          farm: farm ? {
+            name: farm.name,
+            total_area: farm.total_area,
+            area_unit: farm.area_unit,
+            soil_type: farm.soil_type,
+            water_source: farm.water_source,
+          } : undefined,
+          crops: crops || undefined,
+          recentActivities: activities || undefined,
+        });
+
+        // Update initial message with personalized greeting
+        if (profile?.full_name) {
+          setMessages([{
+            id: "1",
+            type: "assistant",
+            content: `Namaste ${profile.full_name}! I'm Krishi Mitra, your AI farming assistant. I know about your farm and crops, so I can give you personalized advice. How can I help you today?`,
+            timestamp: new Date(),
+          }]);
+        }
+      } catch (error) {
+        console.error("Error loading farmer context:", error);
+      } finally {
+        setIsLoadingContext(false);
+      }
+    };
+
+    loadFarmerContext();
+  }, [user]);
+
+  // Load chat history on mount
+  useEffect(() => {
+    if (!user || isLoadingContext) return;
+    
+    const loadHistory = async () => {
+      const { data, error } = await supabase
+        .from('chat_messages')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: true })
+        .limit(50);
+
+      if (data && data.length > 0) {
+        const loadedMessages: Message[] = data.map(msg => ({
+          id: msg.id,
+          type: msg.role as "user" | "assistant",
+          content: msg.content,
+          timestamp: new Date(msg.created_at!),
+        }));
+        setMessages(prev => [prev[0], ...loadedMessages]);
+      }
+    };
+
+    loadHistory();
+  }, [user, isLoadingContext]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const handleSend = () => {
+    handleSendMessage(input);
   };
 
   // Handle voice input toggle
@@ -279,11 +399,21 @@ export default function Chat() {
               <h1 className="font-semibold">Krishi Mitra</h1>
               <p className="text-xs text-success flex items-center gap-1">
                 <span className="w-2 h-2 bg-success rounded-full animate-pulse" />
-                Online
+                {farmerContext?.farmerName ? `Hi, ${farmerContext.farmerName.split(' ')[0]}` : 'Online'}
               </p>
             </div>
           </div>
           <div className="flex items-center gap-1">
+            {/* Language selector */}
+            <select
+              value={currentLang}
+              onChange={(e) => setCurrentLang(e.target.value)}
+              className="h-8 px-2 text-xs rounded-md bg-muted border-0 focus:ring-2 focus:ring-primary/20"
+            >
+              {Object.entries(SPEECH_LANGUAGES).map(([key, { label }]) => (
+                <option key={key} value={key}>{label}</option>
+              ))}
+            </select>
             <Button 
               variant="ghost" 
               size="icon"
