@@ -19,6 +19,24 @@ type SignupStep = 1 | 2;
 const soilTypes = ["Alluvial", "Black/Clay", "Red", "Laterite", "Sandy", "Loamy"];
 const waterSources = ["Well", "Canal", "Borewell", "River", "Rainwater", "Mixed"];
 
+// Kerala districts for location selection
+const keralaDistricts = [
+  "Thiruvananthapuram",
+  "Kollam",
+  "Pathanamthitta",
+  "Alappuzha",
+  "Kottayam",
+  "Idukki",
+  "Ernakulam",
+  "Thrissur",
+  "Palakkad",
+  "Malappuram",
+  "Kozhikode",
+  "Wayanad",
+  "Kannur",
+  "Kasaragod"
+];
+
 export default function Auth() {
   const [mode, setMode] = useState<AuthMode>("signin");
   const [signupStep, setSignupStep] = useState<SignupStep>(1);
@@ -26,7 +44,8 @@ export default function Auth() {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
-  const [location, setLocation] = useState("");
+  const [village, setVillage] = useState("");
+  const [district, setDistrict] = useState("");
   const [landArea, setLandArea] = useState("");
   const [soilType, setSoilType] = useState("");
   const [waterSource, setWaterSource] = useState("");
@@ -85,8 +104,8 @@ export default function Auth() {
   const validateStep2 = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!location.trim()) {
-      newErrors.location = "Please enter your location";
+    if (!district) {
+      newErrors.district = "Please select your district";
     }
 
     if (!landArea.trim() || isNaN(parseFloat(landArea))) {
@@ -162,22 +181,29 @@ export default function Auth() {
       const { data: { user: newUser } } = await supabase.auth.getUser();
       
       if (newUser) {
+        // Combine village and district for location
+        const fullLocation = village.trim() ? `${village.trim()}, ${district}` : district;
+        
         // Update profile with phone and location
         await supabase.from("profiles").update({
           phone,
-          location,
+          location: fullLocation,
         }).eq("id", newUser.id);
 
         // Create farm record
-        await supabase.from("farms").insert({
+        const { error: farmError } = await supabase.from("farms").insert({
           user_id: newUser.id,
           name: `${fullName}'s Farm`,
-          location,
+          location: fullLocation,
           total_area: parseFloat(landArea),
           area_unit: "acres",
           soil_type: soilType,
           water_source: waterSource || null,
         });
+
+        if (farmError) {
+          console.error("Error creating farm:", farmError);
+        }
 
         toast({
           title: "Welcome to FarmAssist!",
@@ -423,16 +449,33 @@ export default function Auth() {
                   <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <input
                     type="text"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    placeholder="Farm location (e.g., Thrissur, Kerala)"
-                    className={cn(
-                      "w-full h-14 pl-12 pr-4 rounded-xl bg-muted border-2 border-transparent focus:ring-0 focus:border-primary/50 outline-none",
-                      errors.location && "border-destructive"
-                    )}
+                    value={village}
+                    onChange={(e) => setVillage(e.target.value)}
+                    placeholder="Village/Town name (optional)"
+                    className="w-full h-14 pl-12 pr-4 rounded-xl bg-muted border-2 border-transparent focus:ring-0 focus:border-primary/50 outline-none"
                   />
                 </div>
-                {errors.location && <p className="text-xs text-destructive pl-1">{errors.location}</p>}
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="relative">
+                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <select
+                    value={district}
+                    onChange={(e) => setDistrict(e.target.value)}
+                    className={cn(
+                      "w-full h-14 pl-12 pr-4 rounded-xl bg-muted border-2 border-transparent focus:ring-0 focus:border-primary/50 outline-none appearance-none",
+                      errors.district && "border-destructive",
+                      !district && "text-muted-foreground"
+                    )}
+                  >
+                    <option value="">Select District (Kerala)</option>
+                    {keralaDistricts.map((d) => (
+                      <option key={d} value={d}>{d}</option>
+                    ))}
+                  </select>
+                </div>
+                {errors.district && <p className="text-xs text-destructive pl-1">{errors.district}</p>}
               </div>
 
               <div className="space-y-1.5">
