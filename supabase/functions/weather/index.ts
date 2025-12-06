@@ -6,22 +6,31 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Default coordinates for major Indian cities as fallback
-const fallbackLocations: { [key: string]: { lat: number; lon: number; name: string; state: string } } = {
-  'kerala': { lat: 10.8505, lon: 76.2711, name: 'Kerala', state: 'Kerala' },
-  'thrissur': { lat: 10.5276, lon: 76.2144, name: 'Thrissur', state: 'Kerala' },
-  'munnar': { lat: 10.0889, lon: 77.0595, name: 'Munnar', state: 'Kerala' },
-  'kochi': { lat: 9.9312, lon: 76.2673, name: 'Kochi', state: 'Kerala' },
-  'delhi': { lat: 28.6139, lon: 77.2090, name: 'Delhi', state: 'Delhi' },
-  'mumbai': { lat: 19.0760, lon: 72.8777, name: 'Mumbai', state: 'Maharashtra' },
-  'bangalore': { lat: 12.9716, lon: 77.5946, name: 'Bangalore', state: 'Karnataka' },
-  'chennai': { lat: 13.0827, lon: 80.2707, name: 'Chennai', state: 'Tamil Nadu' },
-  'hyderabad': { lat: 17.3850, lon: 78.4867, name: 'Hyderabad', state: 'Telangana' },
-  'default': { lat: 20.5937, lon: 78.9629, name: 'India', state: '' },
+// Default coordinates for Indian states as fallback
+const stateFallbacks: { [key: string]: { lat: number; lon: number; name: string } } = {
+  'kerala': { lat: 10.8505, lon: 76.2711, name: 'Kerala' },
+  'tamil nadu': { lat: 11.1271, lon: 78.6569, name: 'Tamil Nadu' },
+  'karnataka': { lat: 15.3173, lon: 75.7139, name: 'Karnataka' },
+  'andhra pradesh': { lat: 15.9129, lon: 79.7400, name: 'Andhra Pradesh' },
+  'telangana': { lat: 18.1124, lon: 79.0193, name: 'Telangana' },
+  'maharashtra': { lat: 19.7515, lon: 75.7139, name: 'Maharashtra' },
+  'gujarat': { lat: 22.2587, lon: 71.1924, name: 'Gujarat' },
+  'rajasthan': { lat: 27.0238, lon: 74.2179, name: 'Rajasthan' },
+  'madhya pradesh': { lat: 22.9734, lon: 78.6569, name: 'Madhya Pradesh' },
+  'uttar pradesh': { lat: 26.8467, lon: 80.9462, name: 'Uttar Pradesh' },
+  'bihar': { lat: 25.0961, lon: 85.3131, name: 'Bihar' },
+  'west bengal': { lat: 22.9868, lon: 87.8550, name: 'West Bengal' },
+  'odisha': { lat: 20.9517, lon: 85.0985, name: 'Odisha' },
+  'punjab': { lat: 31.1471, lon: 75.3412, name: 'Punjab' },
+  'haryana': { lat: 29.0588, lon: 76.0856, name: 'Haryana' },
+  'delhi': { lat: 28.6139, lon: 77.2090, name: 'Delhi' },
+  'assam': { lat: 26.2006, lon: 92.9376, name: 'Assam' },
+  'jharkhand': { lat: 23.6102, lon: 85.2799, name: 'Jharkhand' },
+  'chhattisgarh': { lat: 21.2787, lon: 81.8661, name: 'Chhattisgarh' },
+  'goa': { lat: 15.2993, lon: 74.1240, name: 'Goa' },
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -30,7 +39,6 @@ serve(async (req) => {
     const { location } = await req.json();
     
     if (!location) {
-      console.log("No location provided");
       return new Response(
         JSON.stringify({ error: "Location is required" }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -46,45 +54,77 @@ serve(async (req) => {
       );
     }
 
-    const cleanLocation = location.trim().toLowerCase();
+    const cleanLocation = location.trim();
     console.log(`Fetching weather for location: "${cleanLocation}"`);
 
-    let lat: number, lon: number, locationName: string, stateName: string;
+    let lat: number, lon: number, locationName: string, stateName: string = '';
 
-    // Try geocoding first
-    try {
-      const geoUrl = `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(cleanLocation)},India&limit=5&appid=${apiKey}`;
-      const geoResponse = await fetch(geoUrl);
-      const geoData = await geoResponse.json();
-      
-      console.log(`Geocoding response for "${cleanLocation}":`, JSON.stringify(geoData));
+    // Parse location - could be "Village", "Village, State" or "Village, State, Country"
+    const locationParts = cleanLocation.split(',').map((p: string) => p.trim());
+    const village = locationParts[0] || '';
+    const state = locationParts[1] || '';
+    const country = locationParts[2] || 'India';
 
-      if (geoData && geoData.length > 0) {
-        lat = geoData[0].lat;
-        lon = geoData[0].lon;
-        locationName = geoData[0].name;
-        stateName = geoData[0].state || '';
-        console.log(`Found coordinates: ${lat}, ${lon} for ${locationName}, ${stateName}`);
-      } else {
-        // Try fallback locations
-        const fallback = fallbackLocations[cleanLocation] || 
-                        Object.entries(fallbackLocations).find(([key]) => cleanLocation.includes(key))?.[1] ||
-                        fallbackLocations['default'];
+    // Build search queries in order of specificity
+    const searchQueries = [
+      // Most specific: village, state, country
+      state ? `${village},${state},IN` : `${village},IN`,
+      // Try with just the village and India
+      `${village},India`,
+      // Try the state capital/major city if village not found
+      state ? `${state},IN` : null,
+    ].filter(Boolean);
+
+    let geoResult = null;
+
+    // Try each search query until we get a result
+    for (const query of searchQueries) {
+      try {
+        const geoUrl = `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(query as string)}&limit=5&appid=${apiKey}`;
+        console.log(`Trying geocoding query: "${query}"`);
         
+        const geoResponse = await fetch(geoUrl);
+        const geoData = await geoResponse.json();
+        
+        console.log(`Geocoding response:`, JSON.stringify(geoData));
+
+        if (geoData && Array.isArray(geoData) && geoData.length > 0) {
+          // Find best match - prefer Indian results
+          const indianResult = geoData.find((r: { country: string }) => r.country === 'IN') || geoData[0];
+          geoResult = indianResult;
+          console.log(`Found location: ${geoResult.name}, ${geoResult.state || ''}, ${geoResult.country}`);
+          break;
+        }
+      } catch (geoError) {
+        console.error(`Geocoding error for query "${query}":`, geoError);
+      }
+    }
+
+    if (geoResult) {
+      lat = geoResult.lat;
+      lon = geoResult.lon;
+      locationName = geoResult.name;
+      stateName = geoResult.state || '';
+    } else {
+      // Try state-level fallback
+      const lowerState = (state || village).toLowerCase();
+      const fallback = stateFallbacks[lowerState] || 
+                      Object.entries(stateFallbacks).find(([key]) => lowerState.includes(key))?.[1];
+      
+      if (fallback) {
         lat = fallback.lat;
         lon = fallback.lon;
-        locationName = fallback.name;
-        stateName = fallback.state;
-        console.log(`Using fallback coordinates: ${lat}, ${lon} for ${locationName}`);
+        locationName = village || fallback.name;
+        stateName = fallback.name;
+        console.log(`Using state fallback: ${locationName}, ${stateName}`);
+      } else {
+        // Default to central India
+        lat = 20.5937;
+        lon = 78.9629;
+        locationName = village || 'India';
+        stateName = state || '';
+        console.log(`Using default India coordinates for: ${locationName}`);
       }
-    } catch (geoError) {
-      console.error("Geocoding error:", geoError);
-      // Use default India coordinates
-      const fallback = fallbackLocations['default'];
-      lat = fallback.lat;
-      lon = fallback.lon;
-      locationName = fallback.name;
-      stateName = fallback.state;
     }
 
     // Get current weather
@@ -114,7 +154,7 @@ serve(async (req) => {
       return 'partly-cloudy';
     };
 
-    // Process forecast - get daily highs
+    // Process forecast
     const dailyForecasts: { [key: string]: { temps: number[], condition: number } } = {};
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     
@@ -138,43 +178,23 @@ serve(async (req) => {
         condition: mapCondition(data.condition)
       }));
 
-    // Check for weather alerts
+    // Weather alerts
     const alerts: { type: string; message: string }[] = [];
     
-    if (weatherData.weather && weatherData.weather[0]) {
-      // Heavy rain warning
-      if (weatherData.weather[0].id >= 502 && weatherData.weather[0].id <= 531) {
-        alerts.push({
-          type: 'warning',
-          message: 'Heavy rainfall expected. Protect your crops and delay irrigation.'
-        });
-      }
+    if (weatherData.weather?.[0]?.id >= 502 && weatherData.weather[0].id <= 531) {
+      alerts.push({ type: 'warning', message: 'Heavy rainfall expected. Protect your crops and delay irrigation.' });
     }
     
-    if (weatherData.main) {
-      // Extreme heat warning
-      if (weatherData.main.temp > 40) {
-        alerts.push({
-          type: 'alert',
-          message: 'Extreme heat alert! Increase irrigation and provide shade for sensitive crops.'
-        });
-      }
-      
-      // Low humidity warning
-      if (weatherData.main.humidity < 30) {
-        alerts.push({
-          type: 'info',
-          message: 'Low humidity. Consider increasing irrigation frequency.'
-        });
-      }
+    if (weatherData.main?.temp > 40) {
+      alerts.push({ type: 'alert', message: 'Extreme heat alert! Increase irrigation and provide shade for sensitive crops.' });
     }
     
-    // High winds
-    if (weatherData.wind && weatherData.wind.speed > 10) {
-      alerts.push({
-        type: 'warning',
-        message: 'Strong winds expected. Secure loose structures and young plants.'
-      });
+    if (weatherData.main?.humidity < 30) {
+      alerts.push({ type: 'info', message: 'Low humidity. Consider increasing irrigation frequency.' });
+    }
+    
+    if (weatherData.wind?.speed > 10) {
+      alerts.push({ type: 'warning', message: 'Strong winds expected. Secure loose structures and young plants.' });
     }
 
     const result = {
@@ -196,7 +216,7 @@ serve(async (req) => {
       lastUpdated: new Date().toISOString()
     };
 
-    console.log("Weather data fetched successfully:", result.location);
+    console.log("Weather fetched successfully for:", result.location);
 
     return new Response(
       JSON.stringify(result),
