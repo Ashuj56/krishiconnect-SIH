@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { User, Bell } from "lucide-react";
+import { User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { WeatherWidget } from "@/components/dashboard/WeatherWidget";
 import { TaskCard } from "@/components/dashboard/TaskCard";
 import { QuickActions } from "@/components/dashboard/QuickActions";
 import { CropOverview } from "@/components/dashboard/CropOverview";
 import { AlertsCard } from "@/components/dashboard/AlertsCard";
+import { NotificationCenter } from "@/components/notifications/NotificationCenter";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -52,10 +53,7 @@ export default function Dashboard() {
             <h1 className="text-xl font-bold">{userName}</h1>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" className="relative">
-              <Bell className="w-5 h-5" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full" />
-            </Button>
+            <NotificationCenter />
             <Button variant="ghost" size="icon" onClick={() => navigate("/profile")}>
               <User className="w-5 h-5" />
             </Button>
