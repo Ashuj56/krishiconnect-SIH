@@ -14,7 +14,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+        sans: ['Poppins', 'Noto Sans Malayalam', 'system-ui', 'sans-serif'],
+        malayalam: ['Noto Sans Malayalam', 'Poppins', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -63,6 +64,9 @@ export default {
         "harvest-gold": "hsl(var(--harvest-gold))",
         sky: "hsl(var(--sky))",
         water: "hsl(var(--water))",
+        coconut: "hsl(var(--coconut))",
+        paddy: "hsl(var(--paddy))",
+        banana: "hsl(var(--banana))",
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
@@ -80,11 +84,13 @@ export default {
         sm: "calc(var(--radius) - 4px)",
         xl: "calc(var(--radius) + 4px)",
         "2xl": "calc(var(--radius) + 8px)",
+        "3xl": "calc(var(--radius) + 12px)",
       },
       boxShadow: {
         'card': 'var(--shadow-card)',
         'soft': 'var(--shadow-md)',
-        'glow': '0 0 20px hsl(var(--primary) / 0.3)',
+        'glow': 'var(--shadow-glow)',
+        'premium': '0 8px 32px hsl(var(--primary) / 0.2)',
       },
       keyframes: {
         "accordion-down": {
@@ -99,11 +105,16 @@ export default {
           "0%, 100%": { transform: "translateY(0)" },
           "50%": { transform: "translateY(-4px)" },
         },
+        "shimmer": {
+          "0%": { backgroundPosition: "-200% 0" },
+          "100%": { backgroundPosition: "200% 0" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "bounce-subtle": "bounce-subtle 2s ease-in-out infinite",
+        "shimmer": "shimmer 2s linear infinite",
       },
     },
   },

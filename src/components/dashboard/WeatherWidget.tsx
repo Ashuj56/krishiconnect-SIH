@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { Cloud, Droplets, Wind, Sun, CloudRain, Sunrise, Sunset, RefreshCw, AlertTriangle } from "lucide-react";
+import { Cloud, Droplets, Wind, Sun, CloudRain, RefreshCw, ThermometerSun } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 interface WeatherData {
   temperature: number;
@@ -29,6 +30,13 @@ const weatherIcons = {
   "partly-cloudy": Cloud,
 };
 
+const weatherEmoji: Record<string, string> = {
+  sunny: "☀️",
+  cloudy: "☁️",
+  rainy: "🌧️",
+  "partly-cloudy": "⛅",
+};
+
 export function WeatherWidget() {
   const { user } = useAuth();
   const [weather, setWeather] = useState<WeatherData | null>(null);
@@ -48,14 +56,12 @@ export function WeatherWidget() {
     try {
       setError(null);
       
-      // Get user's location from profile
       const { data: profile } = await supabase
         .from('profiles')
         .select('location')
         .eq('id', user.id)
         .single();
 
-      // Get location from farm if not in profile
       let village = profile?.location;
       if (!village) {
         const { data: farm } = await supabase
@@ -67,7 +73,6 @@ export function WeatherWidget() {
         village = farm?.location;
       }
 
-      // Format location as "Village, Kerala, India" for better geocoding
       const location = village ? `${village}, Kerala, India` : null;
       if (!location) {
         setError("Please add your location in profile settings");
@@ -88,11 +93,10 @@ export function WeatherWidget() {
 
       setWeather(data);
       
-      // Show weather alerts as toast notifications
       if (data.alerts && data.alerts.length > 0) {
         data.alerts.forEach((alert: { type: string; message: string }) => {
           toast({
-            title: alert.type === 'alert' ? "Weather Alert" : "Weather Advisory",
+            title: alert.type === 'alert' ? "⚠️ Weather Alert" : "Weather Advisory",
             description: alert.message,
             variant: alert.type === 'alert' ? "destructive" : "default",
           });
@@ -114,39 +118,23 @@ export function WeatherWidget() {
 
   if (loading) {
     return (
-      <Card className="overflow-hidden">
-        <div className="gradient-weather p-5">
-          <Skeleton className="h-6 w-32 bg-white/20" />
-          <Skeleton className="h-12 w-24 mt-2 bg-white/20" />
-          <Skeleton className="h-4 w-20 mt-2 bg-white/20" />
-          <div className="flex gap-6 mt-4 pt-4 border-t border-white/20">
-            <Skeleton className="h-4 w-16 bg-white/20" />
-            <Skeleton className="h-4 w-16 bg-white/20" />
-          </div>
+      <Card className="overflow-hidden rounded-2xl shadow-card">
+        <div className="gradient-kerala p-5">
+          <Skeleton className="h-6 w-32 bg-primary-foreground/20" />
+          <Skeleton className="h-14 w-28 mt-3 bg-primary-foreground/20" />
+          <Skeleton className="h-4 w-24 mt-2 bg-primary-foreground/20" />
         </div>
-        <CardContent className="p-4">
-          <Skeleton className="h-4 w-24 mb-3" />
-          <div className="grid grid-cols-4 gap-2">
-            {[1, 2, 3, 4].map(i => (
-              <div key={i} className="text-center">
-                <Skeleton className="h-4 w-8 mx-auto" />
-                <Skeleton className="h-5 w-5 mx-auto my-1" />
-                <Skeleton className="h-4 w-8 mx-auto" />
-              </div>
-            ))}
-          </div>
-        </CardContent>
       </Card>
     );
   }
 
   if (error) {
     return (
-      <Card className="overflow-hidden">
-        <div className="gradient-weather p-5 text-accent-foreground">
+      <Card className="overflow-hidden rounded-2xl shadow-card">
+        <div className="gradient-kerala p-5 text-primary-foreground">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm opacity-90">Weather</p>
+              <p className="text-sm opacity-90 font-malayalam">കാലാവസ്ഥ</p>
               <p className="text-sm mt-2">{error}</p>
             </div>
             <Cloud className="w-12 h-12 opacity-50" />
@@ -161,75 +149,81 @@ export function WeatherWidget() {
   const WeatherIcon = weatherIcons[weather.condition] || Cloud;
 
   return (
-    <Card className="overflow-hidden">
-      <div className="gradient-weather p-5 text-accent-foreground">
-        <div className="flex items-start justify-between">
+    <Card className="overflow-hidden rounded-2xl shadow-card border-0">
+      <div className="gradient-kerala p-5 text-primary-foreground relative overflow-hidden">
+        {/* Background decoration */}
+        <div className="absolute right-0 top-0 w-32 h-32 opacity-10">
+          <svg viewBox="0 0 100 100" className="w-full h-full">
+            <circle cx="70" cy="30" r="25" fill="currentColor" />
+            <circle cx="40" cy="60" r="20" fill="currentColor" />
+          </svg>
+        </div>
+
+        <div className="flex items-start justify-between relative z-10">
           <div>
             <div className="flex items-center gap-2">
               <p className="text-sm opacity-90">{weather.location}</p>
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="h-6 w-6 text-accent-foreground/80 hover:text-accent-foreground hover:bg-accent-foreground/10"
+                className="h-6 w-6 text-primary-foreground/80 hover:text-primary-foreground hover:bg-primary-foreground/10"
                 onClick={handleRefresh}
                 disabled={refreshing}
               >
-                <RefreshCw className={`h-3 w-3 ${refreshing ? 'animate-spin' : ''}`} />
+                <RefreshCw className={cn("h-3 w-3", refreshing && "animate-spin")} />
               </Button>
             </div>
-            <div className="flex items-baseline gap-2 mt-1">
-              <span className="text-5xl font-bold">{weather.temperature}°</span>
-              <span className="text-lg opacity-80">C</span>
+            <div className="flex items-baseline gap-1 mt-2">
+              <span className="text-6xl font-bold">{weather.temperature}°</span>
             </div>
-            <p className="text-sm mt-1 capitalize opacity-90">
+            <p className="text-base mt-1 capitalize opacity-95 flex items-center gap-2">
+              <span className="text-2xl">{weatherEmoji[weather.condition] || "🌤️"}</span>
               {weather.description}
             </p>
-            <p className="text-xs mt-1 opacity-70">
+            <p className="text-xs mt-1 opacity-75 flex items-center gap-1">
+              <ThermometerSun className="w-3 h-3" />
               Feels like {weather.feelsLike}°C
             </p>
           </div>
-          <WeatherIcon className="w-16 h-16 opacity-90 animate-float" />
+          <WeatherIcon className="w-20 h-20 opacity-90 animate-float" />
         </div>
 
-        {weather.alerts && weather.alerts.length > 0 && (
-          <div className="mt-3 p-2 rounded-lg bg-accent-foreground/10 border border-accent-foreground/20">
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4" />
-              <span className="text-xs font-medium">{weather.alerts[0].message}</span>
+        {/* Stats */}
+        <div className="flex gap-6 mt-4 pt-4 border-t border-primary-foreground/20">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 rounded-lg bg-primary-foreground/10">
+              <Droplets className="w-4 h-4 opacity-90" />
+            </div>
+            <div>
+              <span className="text-sm font-semibold">{weather.humidity}%</span>
+              <p className="text-xs opacity-70">Humidity</p>
             </div>
           </div>
-        )}
-
-        <div className="flex gap-6 mt-4 pt-4 border-t border-accent-foreground/20">
           <div className="flex items-center gap-2">
-            <Droplets className="w-4 h-4 opacity-80" />
-            <span className="text-sm">{weather.humidity}%</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Wind className="w-4 h-4 opacity-80" />
-            <span className="text-sm">{weather.windSpeed} km/h</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Sunrise className="w-4 h-4 opacity-80" />
-            <span className="text-sm">{weather.sunrise}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Sunset className="w-4 h-4 opacity-80" />
-            <span className="text-sm">{weather.sunset}</span>
+            <div className="p-1.5 rounded-lg bg-primary-foreground/10">
+              <Wind className="w-4 h-4 opacity-90" />
+            </div>
+            <div>
+              <span className="text-sm font-semibold">{weather.windSpeed} km/h</span>
+              <p className="text-xs opacity-70">Wind</p>
+            </div>
           </div>
         </div>
       </div>
 
-      <CardContent className="p-4">
-        <p className="text-xs font-medium text-muted-foreground mb-3">4-Day Forecast</p>
+      {/* Forecast */}
+      <CardContent className="p-4 bg-card">
+        <p className="text-xs font-medium text-muted-foreground mb-3 font-malayalam">
+          4-ദിവസ പ്രവചനം • 4-Day Forecast
+        </p>
         <div className="grid grid-cols-4 gap-2">
           {weather.forecast.map((day) => {
             const DayIcon = weatherIcons[day.condition as keyof typeof weatherIcons] || Cloud;
             return (
-              <div key={day.day} className="text-center">
-                <p className="text-xs text-muted-foreground">{day.day}</p>
-                <DayIcon className="w-5 h-5 mx-auto my-1 text-muted-foreground" />
-                <p className="text-sm font-medium">{day.temp}°</p>
+              <div key={day.day} className="text-center p-2 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors">
+                <p className="text-xs text-muted-foreground font-medium">{day.day}</p>
+                <DayIcon className="w-6 h-6 mx-auto my-2 text-primary" />
+                <p className="text-sm font-semibold">{day.temp}°</p>
               </div>
             );
           })}
