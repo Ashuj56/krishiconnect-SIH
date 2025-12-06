@@ -240,16 +240,30 @@ export default function Knowledge() {
         </div>
         {/* Search */}
         <div className="px-4 pb-3">
-          <div className="relative">
+          <form 
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (searchQuery.trim()) {
+                window.open(`https://www.google.com/search?q=${encodeURIComponent(searchQuery + ' Kerala farming agriculture')}`, '_blank');
+              }
+            }}
+            className="relative"
+          >
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
               type="text"
-              placeholder="Search articles, videos..."
+              placeholder="Search on Google..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full h-10 pl-10 pr-4 rounded-xl bg-muted border-0 focus:ring-2 focus:ring-primary/20 outline-none text-sm"
+              className="w-full h-10 pl-10 pr-12 rounded-xl bg-muted border-0 focus:ring-2 focus:ring-primary/20 outline-none text-sm"
             />
-          </div>
+            <button 
+              type="submit"
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+            >
+              <ExternalLink className="w-4 h-4" />
+            </button>
+          </form>
         </div>
       </header>
 
