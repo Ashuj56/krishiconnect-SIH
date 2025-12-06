@@ -56,26 +56,29 @@ export function WeatherWidget() {
     try {
       setError(null);
       
-      const { data: profile } = await supabase
-        .from('profiles')
+      // Prioritize farm location for weather data
+      const { data: farm } = await supabase
+        .from('farms')
         .select('location')
-        .eq('id', user.id)
+        .eq('user_id', user.id)
+        .limit(1)
         .single();
 
-      let village = profile?.location;
+      let village = farm?.location;
+      
+      // Fallback to profile location if no farm location
       if (!village) {
-        const { data: farm } = await supabase
-          .from('farms')
+        const { data: profile } = await supabase
+          .from('profiles')
           .select('location')
-          .eq('user_id', user.id)
-          .limit(1)
+          .eq('id', user.id)
           .single();
-        village = farm?.location;
+        village = profile?.location;
       }
 
       const location = village ? `${village}, Kerala, India` : null;
       if (!location) {
-        setError("Please add your location in profile settings");
+        setError("Please add your farm location in Farm Profile");
         setLoading(false);
         return;
       }
