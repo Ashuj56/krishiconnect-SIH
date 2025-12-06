@@ -281,9 +281,16 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col kerala-pattern">
+    <div className="min-h-screen flex flex-col relative">
+      {/* Full-screen background image */}
+      <div 
+        className="fixed inset-0 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: "url('/images/kerala-bg-5.jpg')" }}
+      />
+      <div className="fixed inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/60" />
+      
       {/* Hero Section */}
-      <div className="flex-1 flex flex-col items-center justify-center p-6 text-center gradient-kerala">
+      <div className="flex-1 flex flex-col items-center justify-center p-6 text-center relative z-10">
         <div className="w-24 h-24 rounded-3xl bg-white/20 backdrop-blur-sm flex items-center justify-center mb-6 animate-float shadow-2xl border border-white/30">
           <svg viewBox="0 0 60 60" className="w-14 h-14">
             <g fill="none" stroke="#FFD54F" strokeWidth="2.5" strokeLinecap="round">
@@ -296,13 +303,13 @@ export default function Auth() {
             </g>
           </svg>
         </div>
-        <h1 className="text-3xl font-bold mb-1 text-primary-foreground">Krishi Sakhi</h1>
-        <h2 className="text-xl font-semibold text-primary-foreground/90 font-malayalam mb-2">കൃഷി സഖി</h2>
-        <p className="text-primary-foreground/80 text-sm">Your AI-Powered Farming Companion</p>
+        <h1 className="text-3xl font-bold mb-1 text-white drop-shadow-lg">Krishi Sakhi</h1>
+        <h2 className="text-xl font-semibold text-white/90 font-malayalam mb-2 drop-shadow-md">കൃഷി സഖി</h2>
+        <p className="text-white/80 text-sm drop-shadow-sm">Your AI-Powered Farming Companion</p>
       </div>
 
       {/* Auth Card */}
-      <Card className="rounded-t-3xl rounded-b-none border-b-0 safe-bottom">
+      <Card className="rounded-t-3xl rounded-b-none border-b-0 safe-bottom relative z-10 bg-card/95 backdrop-blur-sm">
         <CardHeader className="text-center pb-2">
           <CardTitle>
             {mode === "signin" 
