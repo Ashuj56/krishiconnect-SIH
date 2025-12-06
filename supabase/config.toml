@@ -1,5 +1,8 @@
 project_id = "pimmztrboudsdyxdqiav"
 
+[functions.government-schemes]
+verify_jwt = false
+
 [functions.chat]
 verify_jwt = false
 
