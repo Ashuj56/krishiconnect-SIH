@@ -410,6 +410,20 @@
   100% { transform: scale(1); opacity: 0.8; }
 }
 
+/* Subtle pulse animation for conversation mode */
+@keyframes pulse-subtle {
+  0%, 100% { 
+    box-shadow: 0 0 0 0 hsl(var(--primary) / 0.4);
+  }
+  50% { 
+    box-shadow: 0 0 0 8px hsl(var(--primary) / 0);
+  }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s ease-in-out infinite;
+}
+
 /* Wavy divider */
 .wavy-divider {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 100'%3E%3Cpath fill='%23f5f7f5' d='M0,50 C360,100 720,0 1080,50 C1260,75 1380,75 1440,50 L1440,100 L0,100 Z'/%3E%3C/svg%3E");

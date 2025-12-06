@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Send, Mic, MicOff, Volume2, VolumeX, Leaf, Image, MoreVertical, ChevronLeft } from "lucide-react";
+import { Send, Mic, MicOff, Volume2, VolumeX, Leaf, Image, ChevronLeft, PhoneCall, PhoneOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useSpeech } from "@/hooks/useSpeech";
+import { AudioWaveform } from "@/components/chat/AudioWaveform";
 
 interface Message {
   id: string;
@@ -75,11 +76,12 @@ export default function Chat() {
   const [currentLang, setCurrentLang] = useState('en');
   const [farmerContext, setFarmerContext] = useState<FarmerContext | null>(null);
   const [isLoadingContext, setIsLoadingContext] = useState(true);
+  const [conversationMode, setConversationMode] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
-
+  const speakRef = useRef<((text: string, lang?: string) => void) | null>(null);
   // Handle sending message - defined before useSpeech so we can use it in onTranscript
   const handleSendMessage = useCallback(async (messageText: string) => {
     if (!messageText.trim() || isTyping) return;
@@ -217,8 +219,8 @@ export default function Chat() {
       }
 
       // Speak the response if voice is enabled
-      if (voiceEnabled && assistantContent) {
-        speak(assistantContent, SPEECH_LANGUAGES[currentLang]?.speech || 'en-IN');
+      if (voiceEnabled && assistantContent && speakRef.current) {
+        speakRef.current(assistantContent, SPEECH_LANGUAGES[currentLang]?.speech || 'en-IN');
       }
 
       return assistantContent;
@@ -241,13 +243,16 @@ export default function Chat() {
     isListening, 
     isSpeaking, 
     transcript,
+    interimTranscript,
     isSupported,
+    audioLevel,
     startListening, 
     stopListening, 
     speak, 
     stopSpeaking 
   } = useSpeech({
     language: SPEECH_LANGUAGES[currentLang]?.speech || 'en-IN',
+    continuous: conversationMode,
     onTranscript: (text) => {
       // Auto-send when voice input is final
       if (text.trim()) {
@@ -255,6 +260,11 @@ export default function Chat() {
       }
     },
   });
+
+  // Store speak function in ref for use in handleSendMessage
+  useEffect(() => {
+    speakRef.current = speak;
+  }, [speak]);
 
   // Load farmer context (profile, farm, crops, activities)
   useEffect(() => {
@@ -379,8 +389,25 @@ export default function Chat() {
   const handleVoiceInput = () => {
     if (isListening) {
       stopListening();
+      setConversationMode(false);
     } else {
       startListening();
+    }
+  };
+
+  // Toggle conversation mode (hands-free)
+  const toggleConversationMode = () => {
+    if (conversationMode) {
+      setConversationMode(false);
+      stopListening();
+    } else {
+      setConversationMode(true);
+      setVoiceEnabled(true);
+      startListening();
+      toast({
+        title: "Conversation Mode",
+        description: "Speak naturally. I'll listen and respond automatically.",
+      });
     }
   };
 
@@ -501,31 +528,61 @@ export default function Chat() {
         </div>
       )}
 
-      {/* Listening Indicator */}
+      {/* Listening Indicator with Waveform */}
       {isListening && (
         <div className="px-4 pb-2">
-          <div className="flex items-center gap-2 text-primary">
-            <div className="flex gap-1">
-              <span className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-              <span className="w-2 h-2 bg-primary rounded-full animate-pulse" style={{ animationDelay: "150ms" }} />
-              <span className="w-2 h-2 bg-primary rounded-full animate-pulse" style={{ animationDelay: "300ms" }} />
+          <div className="flex items-center gap-3 p-3 bg-primary/10 rounded-xl">
+            <AudioWaveform 
+              isActive={true} 
+              audioLevel={audioLevel} 
+              variant="listening"
+              className="w-12"
+            />
+            <div className="flex-1">
+              <span className="text-sm font-medium text-primary">
+                {conversationMode ? "Conversation Mode" : "Listening..."}
+              </span>
+              {(transcript || interimTranscript) && (
+                <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                  "{interimTranscript || transcript}"
+                </p>
+              )}
             </div>
-            <span className="text-sm">Listening... {transcript && `"${transcript}"`}</span>
+            {conversationMode && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={toggleConversationMode}
+                className="h-7 text-xs text-destructive hover:text-destructive"
+              >
+                End
+              </Button>
+            )}
           </div>
         </div>
       )}
 
-      {/* Speaking Indicator */}
+      {/* Speaking Indicator with Waveform */}
       {isSpeaking && (
         <div className="px-4 pb-2">
-          <div className="flex items-center gap-2 text-success">
-            <Volume2 className="w-4 h-4 animate-pulse" />
-            <span className="text-sm">Speaking...</span>
+          <div className="flex items-center gap-3 p-3 bg-secondary/20 rounded-xl">
+            <AudioWaveform 
+              isActive={true} 
+              audioLevel={0.6} 
+              variant="speaking"
+              className="w-12"
+            />
+            <div className="flex-1">
+              <span className="text-sm font-medium text-secondary-foreground">Speaking...</span>
+              {conversationMode && (
+                <p className="text-xs text-muted-foreground mt-0.5">Will listen after speaking</p>
+              )}
+            </div>
             <Button 
               variant="ghost" 
               size="sm" 
               onClick={stopSpeaking}
-              className="h-6 text-xs"
+              className="h-7 text-xs"
             >
               Stop
             </Button>
@@ -536,16 +593,28 @@ export default function Chat() {
       {/* Input Area */}
       <div className="sticky bottom-16 md:bottom-0 bg-card border-t border-border p-4 safe-bottom">
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="shrink-0">
-            <Image className="w-5 h-5" />
+          {/* Conversation Mode Toggle */}
+          <Button 
+            variant={conversationMode ? "default" : "outline"}
+            size="icon" 
+            className={cn(
+              "shrink-0 transition-all",
+              conversationMode && "bg-primary ring-2 ring-primary/30"
+            )}
+            onClick={toggleConversationMode}
+            disabled={!isSupported}
+            title={conversationMode ? "End conversation mode" : "Start hands-free conversation"}
+          >
+            {conversationMode ? <PhoneOff className="w-5 h-5" /> : <PhoneCall className="w-5 h-5" />}
           </Button>
+          
           <div className="flex-1 relative">
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyPress={(e) => e.key === "Enter" && handleSend()}
-              placeholder={isListening ? "Listening..." : "Ask about your crops..."}
+              placeholder={isListening ? "Listening..." : conversationMode ? "Say something..." : "Ask about your crops..."}
               className="w-full h-11 px-4 pr-12 rounded-full bg-muted border-0 focus:ring-2 focus:ring-primary/20 outline-none text-sm"
               disabled={isTyping || isListening}
             />
@@ -553,7 +622,7 @@ export default function Chat() {
               variant="ghost"
               size="icon"
               onClick={handleVoiceInput}
-              disabled={!isSupported}
+              disabled={!isSupported || conversationMode}
               className={cn(
                 "absolute right-1 top-1/2 -translate-y-1/2",
                 isListening && "bg-primary text-primary-foreground hover:bg-primary/90"
@@ -572,6 +641,13 @@ export default function Chat() {
             <Send className="w-5 h-5" />
           </Button>
         </div>
+        
+        {/* Conversation Mode Hint */}
+        {!conversationMode && messages.length > 1 && !isListening && !isSpeaking && (
+          <p className="text-xs text-muted-foreground text-center mt-2">
+            Tap <PhoneCall className="w-3 h-3 inline" /> for hands-free speech-to-speech conversation
+          </p>
+        )}
       </div>
     </div>
   );
