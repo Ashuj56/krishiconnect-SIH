@@ -32,6 +32,24 @@ const soilTypes = ["Alluvial", "Black/Clay", "Red", "Laterite", "Sandy", "Loamy"
 const waterSources = ["Well", "Canal", "Borewell", "River", "Rainwater", "Mixed"];
 const cropStages = ["Seedling", "Growing", "Flowering", "Fruiting", "Mature", "Harvesting"];
 
+// Kerala districts for location selection
+const keralaDistricts = [
+  "Thiruvananthapuram",
+  "Kollam",
+  "Pathanamthitta",
+  "Alappuzha",
+  "Kottayam",
+  "Idukki",
+  "Ernakulam",
+  "Thrissur",
+  "Palakkad",
+  "Malappuram",
+  "Kozhikode",
+  "Wayanad",
+  "Kannur",
+  "Kasaragod"
+];
+
 export default function FarmProfile() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -224,15 +242,20 @@ export default function FarmProfile() {
                 <div className="flex items-center gap-1 mt-1 opacity-90">
                   <MapPin className="w-4 h-4" />
                   {isEditing ? (
-                    <input
-                      type="text"
+                    <select
                       value={editForm.location || ""}
                       onChange={(e) => setEditForm({ ...editForm, location: e.target.value })}
-                      className="text-sm bg-transparent border-b border-primary-foreground/50 outline-none"
-                      placeholder="Enter location"
-                    />
+                      className="text-sm bg-primary-foreground/10 border border-primary-foreground/30 rounded-lg px-2 py-1 outline-none text-primary-foreground"
+                    >
+                      <option value="" className="text-foreground bg-background">Select District</option>
+                      {keralaDistricts.map((district) => (
+                        <option key={district} value={district} className="text-foreground bg-background">
+                          {district}
+                        </option>
+                      ))}
+                    </select>
                   ) : (
-                    <span className="text-sm">{farm.location || "No location set"}</span>
+                    <span className="text-sm">{farm.location ? `${farm.location}, Kerala` : "No location set"}</span>
                   )}
                 </div>
               </div>
