@@ -233,14 +233,24 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col kerala-pattern">
       {/* Hero Section */}
-      <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-        <div className="w-20 h-20 rounded-2xl gradient-primary flex items-center justify-center mb-6 animate-float">
-          <Leaf className="w-10 h-10 text-primary-foreground" />
+      <div className="flex-1 flex flex-col items-center justify-center p-6 text-center gradient-kerala">
+        <div className="w-24 h-24 rounded-3xl bg-white/20 backdrop-blur-sm flex items-center justify-center mb-6 animate-float shadow-2xl border border-white/30">
+          <svg viewBox="0 0 60 60" className="w-14 h-14">
+            <g fill="none" stroke="#FFD54F" strokeWidth="2.5" strokeLinecap="round">
+              <ellipse cx="22" cy="20" rx="4" ry="8" fill="#FFD54F" stroke="none" />
+              <ellipse cx="38" cy="20" rx="4" ry="8" fill="#FFD54F" stroke="none" />
+              <ellipse cx="30" cy="15" rx="4" ry="9" fill="#FFD54F" stroke="none" />
+              <path d="M30 55 L30 25" />
+              <path d="M30 45 Q15 40 10 50" stroke="#81C784" strokeWidth="3" />
+              <path d="M30 45 Q45 40 50 50" stroke="#81C784" strokeWidth="3" />
+            </g>
+          </svg>
         </div>
-        <h1 className="text-3xl font-bold mb-2">FarmAssist</h1>
-        <p className="text-muted-foreground">Your AI-Powered Farming Companion</p>
+        <h1 className="text-3xl font-bold mb-1 text-primary-foreground">Krishi Sakhi</h1>
+        <h2 className="text-xl font-semibold text-primary-foreground/90 font-malayalam mb-2">കൃഷി സഖി</h2>
+        <p className="text-primary-foreground/80 text-sm">Your AI-Powered Farming Companion</p>
       </div>
 
       {/* Auth Card */}

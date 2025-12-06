@@ -384,34 +384,33 @@ export default function Chat() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-background">
+    <div className="flex flex-col h-screen bg-background kerala-pattern">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-card border-b border-border safe-top">
-        <div className="flex items-center justify-between px-4 py-3">
+      <header className="sticky top-0 z-40 gradient-kerala text-primary-foreground safe-top">
+        <div className="flex items-center justify-between px-4 py-4">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="md:hidden">
+            <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="md:hidden text-primary-foreground hover:bg-primary-foreground/10">
               <ChevronLeft className="w-5 h-5" />
             </Button>
-            <div className="w-10 h-10 rounded-full gradient-primary flex items-center justify-center">
-              <Leaf className="w-5 h-5 text-primary-foreground" />
+            <div className="w-11 h-11 rounded-full bg-primary-foreground/20 flex items-center justify-center">
+              <Leaf className="w-6 h-6 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="font-semibold">Krishi Mitra</h1>
-              <p className="text-xs text-success flex items-center gap-1">
-                <span className="w-2 h-2 bg-success rounded-full animate-pulse" />
+              <h1 className="font-semibold text-lg">Krishi Sakhi</h1>
+              <p className="text-xs text-primary-foreground/80 flex items-center gap-1">
+                <span className="w-2 h-2 bg-secondary rounded-full animate-pulse" />
                 {farmerContext?.farmerName ? `Hi, ${farmerContext.farmerName.split(' ')[0]}` : 'Online'}
               </p>
             </div>
           </div>
           <div className="flex items-center gap-1">
-            {/* Language selector */}
             <select
               value={currentLang}
               onChange={(e) => setCurrentLang(e.target.value)}
-              className="h-8 px-2 text-xs rounded-md bg-muted border-0 focus:ring-2 focus:ring-primary/20"
+              className="h-8 px-2 text-xs rounded-lg bg-primary-foreground/20 border-0 text-primary-foreground focus:ring-2 focus:ring-primary-foreground/20"
             >
               {Object.entries(SPEECH_LANGUAGES).map(([key, { label }]) => (
-                <option key={key} value={key}>{label}</option>
+                <option key={key} value={key} className="text-foreground bg-card">{label}</option>
               ))}
             </select>
             <Button 
@@ -421,13 +420,10 @@ export default function Chat() {
                 setVoiceEnabled(!voiceEnabled);
                 if (isSpeaking) stopSpeaking();
               }}
-              className={cn(!voiceEnabled && "text-muted-foreground")}
+              className={cn("text-primary-foreground hover:bg-primary-foreground/10", !voiceEnabled && "opacity-60")}
               title={voiceEnabled ? "Disable voice responses" : "Enable voice responses"}
             >
               {voiceEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
-            </Button>
-            <Button variant="ghost" size="icon">
-              <MoreVertical className="w-5 h-5" />
             </Button>
           </div>
         </div>
