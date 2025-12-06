@@ -150,6 +150,39 @@ export type Database = {
           },
         ]
       }
+      farmer_documents: {
+        Row: {
+          document_type: string
+          file_name: string
+          file_path: string
+          file_size: number | null
+          id: string
+          uploaded_at: string | null
+          user_id: string
+          verified: boolean | null
+        }
+        Insert: {
+          document_type: string
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          id?: string
+          uploaded_at?: string | null
+          user_id: string
+          verified?: boolean | null
+        }
+        Update: {
+          document_type?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          id?: string
+          uploaded_at?: string | null
+          user_id?: string
+          verified?: boolean | null
+        }
+        Relationships: []
+      }
       farms: {
         Row: {
           area_unit: string | null

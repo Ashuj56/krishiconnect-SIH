@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import DocumentManager from "@/components/documents/DocumentManager";
 
 interface Scheme {
   id: string;
@@ -314,25 +315,8 @@ export default function Schemes() {
           </CardContent>
         </Card>
 
-        {/* Document Checklist */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle>Common Documents Needed</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground mb-3">
-              Keep these documents ready for scheme applications
-            </p>
-            <div className="space-y-2">
-              {["Aadhaar Card", "Land Records (7/12 or equivalent)", "Bank Passbook", "Caste Certificate", "Passport Photo"].map((doc) => (
-                <div key={doc} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                  <span className="text-sm">{doc}</span>
-                  <Button variant="ghost" size="sm">Upload</Button>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        {/* Document Manager */}
+        <DocumentManager />
       </div>
     </div>
   );
