@@ -122,7 +122,8 @@ export default function Chat() {
         },
         body: JSON.stringify({ 
           messages: chatMessages,
-          farmerContext: farmerContext 
+          farmerContext: farmerContext,
+          language: currentLang
         }),
       });
 
