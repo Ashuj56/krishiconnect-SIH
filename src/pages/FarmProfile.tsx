@@ -58,25 +58,9 @@ export default function FarmProfile() {
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState<Partial<Farm>>({});
-  const [editVillage, setEditVillage] = useState("");
-  const [editDistrict, setEditDistrict] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [showAddCrop, setShowAddCrop] = useState(false);
   const [newCrop, setNewCrop] = useState({ name: "", variety: "", area: "", stage: "", health: "good" });
-
-  // Parse location into village and district
-  const parseLocation = (location: string | null) => {
-    if (!location) return { village: "", district: "" };
-    const parts = location.split(",").map(p => p.trim());
-    if (parts.length >= 2) {
-      return { village: parts[0], district: parts[1] };
-    }
-    // Check if it's just a district
-    if (keralaDistricts.includes(parts[0])) {
-      return { village: "", district: parts[0] };
-    }
-    return { village: parts[0], district: "" };
-  };
 
   useEffect(() => {
     if (user) {
@@ -98,9 +82,6 @@ export default function FarmProfile() {
       if (farmData) {
         setFarm(farmData);
         setEditForm(farmData);
-        const { village, district } = parseLocation(farmData.location);
-        setEditVillage(village);
-        setEditDistrict(district);
 
         // Fetch crops for this farm
         const { data: cropsData } = await supabase
@@ -124,14 +105,11 @@ export default function FarmProfile() {
 
     setIsSaving(true);
     try {
-      // Combine village and district for location
-      const fullLocation = editVillage.trim() ? `${editVillage.trim()}, ${editDistrict}` : editDistrict;
-      
       const { error } = await supabase
         .from("farms")
         .update({
           name: editForm.name,
-          location: fullLocation,
+          location: editForm.location,
           total_area: editForm.total_area,
           soil_type: editForm.soil_type,
           water_source: editForm.water_source,
@@ -140,7 +118,7 @@ export default function FarmProfile() {
 
       if (error) throw error;
 
-      setFarm({ ...farm, ...editForm, location: fullLocation });
+      setFarm({ ...farm, ...editForm });
       setIsEditing(false);
       toast({ title: "Farm updated successfully" });
     } catch (error) {
@@ -261,35 +239,24 @@ export default function FarmProfile() {
                 ) : (
                   <h2 className="text-2xl font-bold">{farm.name}</h2>
                 )}
-                <div className="flex flex-col gap-2 mt-2 opacity-90">
-                  <div className="flex items-center gap-1">
-                    <MapPin className="w-4 h-4" />
-                    {isEditing ? (
-                      <div className="flex flex-col gap-2">
-                        <input
-                          type="text"
-                          value={editVillage}
-                          onChange={(e) => setEditVillage(e.target.value)}
-                          placeholder="Village/Town (optional)"
-                          className="text-sm bg-primary-foreground/10 border border-primary-foreground/30 rounded-lg px-2 py-1 outline-none text-primary-foreground placeholder:text-primary-foreground/50"
-                        />
-                        <select
-                          value={editDistrict}
-                          onChange={(e) => setEditDistrict(e.target.value)}
-                          className="text-sm bg-primary-foreground/10 border border-primary-foreground/30 rounded-lg px-2 py-1 outline-none text-primary-foreground"
-                        >
-                          <option value="" className="text-foreground bg-background">Select District</option>
-                          {keralaDistricts.map((d) => (
-                            <option key={d} value={d} className="text-foreground bg-background">
-                              {d}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    ) : (
-                      <span className="text-sm">{farm.location ? `${farm.location}, Kerala` : "No location set"}</span>
-                    )}
-                  </div>
+                <div className="flex items-center gap-1 mt-1 opacity-90">
+                  <MapPin className="w-4 h-4" />
+                  {isEditing ? (
+                    <select
+                      value={editForm.location || ""}
+                      onChange={(e) => setEditForm({ ...editForm, location: e.target.value })}
+                      className="text-sm bg-primary-foreground/10 border border-primary-foreground/30 rounded-lg px-2 py-1 outline-none text-primary-foreground"
+                    >
+                      <option value="" className="text-foreground bg-background">Select District</option>
+                      {keralaDistricts.map((district) => (
+                        <option key={district} value={district} className="text-foreground bg-background">
+                          {district}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <span className="text-sm">{farm.location ? `${farm.location}, Kerala` : "No location set"}</span>
+                  )}
                 </div>
               </div>
               <div className="text-right">
