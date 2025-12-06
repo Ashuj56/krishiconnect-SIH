@@ -5,13 +5,20 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Language instructions
+const languageInstructions: Record<string, string> = {
+  'en': 'Respond in English. Use simple, easy to understand language suitable for farmers.',
+  'ml': 'Always respond in Malayalam (മലയാളം). Use the Malayalam script. ഉത്തരം മലയാളത്തിൽ നൽകുക.',
+  'hi': 'Always respond in Hindi (हिंदी). Use the Devanagari script. कृपया हिंदी में जवाब दें।',
+};
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { messages, farmerContext } = await req.json();
+    const { messages, farmerContext, language = 'en' } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     
     if (!LOVABLE_API_KEY) {
@@ -20,9 +27,17 @@ serve(async (req) => {
 
     console.log("Processing chat request with", messages.length, "messages");
     console.log("Farmer context:", farmerContext);
+    console.log("Language:", language);
+
+    // Get language instruction
+    const langInstruction = languageInstructions[language] || languageInstructions['en'];
 
     // Build personalized system prompt with farmer context
-    let systemPrompt = `You are Krishi Mitra, a helpful AI farming assistant for Indian farmers. You provide advice on:
+    let systemPrompt = `You are Krishi Mitra (കൃഷി മിത്ര / कृषि मित्र), a helpful AI farming assistant for Indian farmers. 
+
+IMPORTANT LANGUAGE INSTRUCTION: ${langInstruction}
+
+You provide advice on:
 - Crop management and best practices
 - Pest and disease identification and treatment
 - Weather-based farming recommendations
@@ -31,7 +46,7 @@ serve(async (req) => {
 - Government schemes and subsidies for farmers
 - Market prices and selling strategies
 
-Always be helpful, practical, and consider the Indian farming context. Provide responses in simple language that farmers can easily understand. If asked in Hindi or other Indian languages, respond in that language.`;
+Always be helpful, practical, and consider the Indian farming context. Provide responses in the farmer's preferred language.`;
 
     // Add personalized farmer context if available
     if (farmerContext) {
@@ -73,7 +88,7 @@ Always be helpful, practical, and consider the Indian farming context. Provide r
       }
       
       systemPrompt += `\n\n--- END OF FARMER PROFILE ---`;
-      systemPrompt += `\n\nUse the above information to provide personalized advice. Address the farmer by name when appropriate. Consider their specific crops, location, and recent activities when giving recommendations.`;
+      systemPrompt += `\n\nUse the above information to provide personalized advice. Address the farmer by name when appropriate. Consider their specific crops, location, and recent activities when giving recommendations. Remember to always respond in ${language === 'ml' ? 'Malayalam' : language === 'hi' ? 'Hindi' : 'English'}.`;
     }
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Leaf, Mail, Lock, User, ArrowRight, Eye, EyeOff, Phone, MapPin, Mountain, Droplets } from "lucide-react";
+import { Leaf, Mail, Lock, User, ArrowRight, Eye, EyeOff, Phone, MapPin, Mountain, Droplets, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -8,20 +8,28 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
+import { Language, translations } from "@/contexts/LanguageContext";
 
 const emailSchema = z.string().email("Please enter a valid email address");
 const passwordSchema = z.string().min(6, "Password must be at least 6 characters");
 const phoneSchema = z.string().min(10, "Please enter a valid phone number");
 
 type AuthMode = "signin" | "signup";
-type SignupStep = 1 | 2;
+type SignupStep = 0 | 1 | 2; // 0 = language selection, 1 = personal, 2 = farm
 
 const soilTypes = ["Alluvial", "Black/Clay", "Red", "Laterite", "Sandy", "Loamy"];
 const waterSources = ["Well", "Canal", "Borewell", "River", "Rainwater", "Mixed"];
 
+const languageOptions: { code: Language; name: string; nativeName: string }[] = [
+  { code: "en", name: "English", nativeName: "English" },
+  { code: "ml", name: "Malayalam", nativeName: "മലയാളം" },
+  { code: "hi", name: "Hindi", nativeName: "हिंदी" },
+];
+
 export default function Auth() {
   const [mode, setMode] = useState<AuthMode>("signin");
-  const [signupStep, setSignupStep] = useState<SignupStep>(1);
+  const [signupStep, setSignupStep] = useState<SignupStep>(0);
+  const [selectedLanguage, setSelectedLanguage] = useState<Language>("en");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -41,11 +49,27 @@ export default function Auth() {
 
   const from = (locationHook.state as any)?.from?.pathname || "/";
 
+  // Helper function for translations
+  const t = (key: string): string => {
+    if (translations[key]) {
+      return translations[key][selectedLanguage];
+    }
+    return key;
+  };
+
   useEffect(() => {
     if (user) {
       navigate(from, { replace: true });
     }
   }, [user, navigate, from]);
+
+  // Load language preference from localStorage
+  useEffect(() => {
+    const stored = localStorage.getItem("krishi-sakhi-language");
+    if (stored && ["en", "ml", "hi"].includes(stored)) {
+      setSelectedLanguage(stored as Language);
+    }
+  }, []);
 
   const validateStep1 = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -124,6 +148,13 @@ export default function Auth() {
     return Object.keys(newErrors).length === 0;
   };
 
+  const handleLanguageSelect = () => {
+    localStorage.setItem("krishi-sakhi-language", selectedLanguage);
+    if (mode === "signup") {
+      setSignupStep(1);
+    }
+  };
+
   const handleNextStep = () => {
     if (validateStep1()) {
       setSignupStep(2);
@@ -147,7 +178,7 @@ export default function Auth() {
             variant: "destructive",
           });
           setMode("signin");
-          setSignupStep(1);
+          setSignupStep(0);
         } else {
           toast({
             title: "Error",
@@ -162,10 +193,11 @@ export default function Auth() {
       const { data: { user: newUser } } = await supabase.auth.getUser();
       
       if (newUser) {
-        // Update profile with phone and location
+        // Update profile with phone, location, and language
         await supabase.from("profiles").update({
           phone,
           location,
+          language: selectedLanguage,
         }).eq("id", newUser.id);
 
         // Create farm record
@@ -180,7 +212,7 @@ export default function Auth() {
         });
 
         toast({
-          title: "Welcome to FarmAssist!",
+          title: "Welcome to Krishi Sakhi!",
           description: "Your account and farm profile have been created.",
         });
       }
@@ -197,6 +229,20 @@ export default function Auth() {
 
     try {
       const { error } = await signIn(email, password);
+      
+      if (!error) {
+        // Update language preference after successful login
+        localStorage.setItem("krishi-sakhi-language", selectedLanguage);
+        
+        // Get user and update profile language
+        const { data: { user: loggedInUser } } = await supabase.auth.getUser();
+        if (loggedInUser) {
+          await supabase.from("profiles").update({
+            language: selectedLanguage,
+          }).eq("id", loggedInUser.id);
+        }
+      }
+      
       if (error) {
         if (error.message.includes("Invalid login credentials")) {
           toast({
@@ -220,6 +266,8 @@ export default function Auth() {
   const handleSubmit = async () => {
     if (mode === "signin") {
       await handleSignIn();
+    } else if (signupStep === 0) {
+      handleLanguageSelect();
     } else if (signupStep === 1) {
       handleNextStep();
     } else {
@@ -228,7 +276,7 @@ export default function Auth() {
   };
 
   const resetForm = () => {
-    setSignupStep(1);
+    setSignupStep(0);
     setErrors({});
   };
 
@@ -258,17 +306,21 @@ export default function Auth() {
         <CardHeader className="text-center pb-2">
           <CardTitle>
             {mode === "signin" 
-              ? "Welcome Back" 
-              : signupStep === 1 
-                ? "Create Account" 
-                : "Farm Details"}
+              ? t("welcomeBack") 
+              : signupStep === 0
+                ? t("selectLanguage")
+                : signupStep === 1 
+                  ? t("createAccount")
+                  : t("farmDetails")}
           </CardTitle>
           <p className="text-sm text-muted-foreground mt-1">
             {mode === "signin" 
               ? "Sign in to access your farm data" 
-              : signupStep === 1
-                ? "Enter your personal details"
-                : "Tell us about your farm"}
+              : signupStep === 0
+                ? "Choose your preferred language"
+                : signupStep === 1
+                  ? "Enter your personal details"
+                  : "Tell us about your farm"}
           </p>
         </CardHeader>
         <CardContent className="pb-8 space-y-4">
@@ -283,7 +335,7 @@ export default function Auth() {
                   : "text-muted-foreground"
               )}
             >
-              Sign In
+              {t("signIn")}
             </button>
             <button
               onClick={() => { setMode("signup"); resetForm(); }}
@@ -294,13 +346,40 @@ export default function Auth() {
                   : "text-muted-foreground"
               )}
             >
-              Sign Up
+              {t("signUp")}
             </button>
           </div>
 
-          {/* Sign In Form */}
+          {/* Language Selection for Sign In */}
           {mode === "signin" && (
             <>
+              <div className="space-y-3 mb-4">
+                <label className="text-sm font-medium flex items-center gap-2">
+                  <Globe className="w-4 h-4" />
+                  {t("selectLanguage")}
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {languageOptions.map((lang) => (
+                    <button
+                      key={lang.code}
+                      onClick={() => {
+                        setSelectedLanguage(lang.code);
+                        localStorage.setItem("krishi-sakhi-language", lang.code);
+                      }}
+                      className={cn(
+                        "p-3 rounded-xl border-2 transition-all text-center",
+                        selectedLanguage === lang.code
+                          ? "border-primary bg-primary/10"
+                          : "border-border hover:border-primary/50"
+                      )}
+                    >
+                      <span className="block text-lg font-semibold">{lang.nativeName}</span>
+                      <span className="text-xs text-muted-foreground">{lang.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <div className="space-y-1.5">
                 <div className="relative">
                   <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
@@ -308,7 +387,7 @@ export default function Auth() {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Email address"
+                    placeholder={t("email")}
                     className={cn(
                       "w-full h-14 pl-12 pr-4 rounded-xl bg-muted border-2 border-transparent focus:ring-0 focus:border-primary/50 outline-none",
                       errors.email && "border-destructive"
@@ -325,7 +404,7 @@ export default function Auth() {
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Password"
+                    placeholder={t("password")}
                     onKeyPress={(e) => e.key === "Enter" && handleSubmit()}
                     className={cn(
                       "w-full h-14 pl-12 pr-12 rounded-xl bg-muted border-2 border-transparent focus:ring-0 focus:border-primary/50 outline-none",
@@ -345,6 +424,41 @@ export default function Auth() {
             </>
           )}
 
+          {/* Sign Up Step 0 - Language Selection */}
+          {mode === "signup" && signupStep === 0 && (
+            <div className="space-y-4">
+              <div className="grid gap-3">
+                {languageOptions.map((lang) => (
+                  <button
+                    key={lang.code}
+                    onClick={() => setSelectedLanguage(lang.code)}
+                    className={cn(
+                      "p-4 rounded-xl border-2 transition-all flex items-center gap-4",
+                      selectedLanguage === lang.code
+                        ? "border-primary bg-primary/10"
+                        : "border-border hover:border-primary/50"
+                    )}
+                  >
+                    <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                      <Globe className="w-6 h-6 text-primary" />
+                    </div>
+                    <div className="text-left flex-1">
+                      <span className="block text-lg font-semibold">{lang.nativeName}</span>
+                      <span className="text-sm text-muted-foreground">{lang.name}</span>
+                    </div>
+                    {selectedLanguage === lang.code && (
+                      <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
+                        <svg className="w-4 h-4 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Sign Up Step 1 - Personal Details */}
           {mode === "signup" && signupStep === 1 && (
             <>
@@ -355,7 +469,7 @@ export default function Auth() {
                     type="text"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    placeholder="Full name"
+                    placeholder={t("fullName")}
                     className={cn(
                       "w-full h-14 pl-12 pr-4 rounded-xl bg-muted border-2 border-transparent focus:ring-0 focus:border-primary/50 outline-none",
                       errors.fullName && "border-destructive"
@@ -372,7 +486,7 @@ export default function Auth() {
                     type="tel"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    placeholder="Mobile number"
+                    placeholder={t("phone")}
                     className={cn(
                       "w-full h-14 pl-12 pr-4 rounded-xl bg-muted border-2 border-transparent focus:ring-0 focus:border-primary/50 outline-none",
                       errors.phone && "border-destructive"
@@ -389,7 +503,7 @@ export default function Auth() {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Email address"
+                    placeholder={t("email")}
                     className={cn(
                       "w-full h-14 pl-12 pr-4 rounded-xl bg-muted border-2 border-transparent focus:ring-0 focus:border-primary/50 outline-none",
                       errors.email && "border-destructive"
@@ -406,7 +520,7 @@ export default function Auth() {
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Password"
+                    placeholder={t("password")}
                     className={cn(
                       "w-full h-14 pl-12 pr-12 rounded-xl bg-muted border-2 border-transparent focus:ring-0 focus:border-primary/50 outline-none",
                       errors.password && "border-destructive"
@@ -422,6 +536,14 @@ export default function Auth() {
                 </div>
                 {errors.password && <p className="text-xs text-destructive pl-1">{errors.password}</p>}
               </div>
+
+              <Button
+                variant="ghost"
+                className="w-full"
+                onClick={() => setSignupStep(0)}
+              >
+                ← {t("back")}
+              </Button>
             </>
           )}
 
@@ -435,7 +557,7 @@ export default function Auth() {
                     type="text"
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
-                    placeholder="Farm location (e.g., Thrissur, Kerala)"
+                    placeholder={t("farmLocation")}
                     className={cn(
                       "w-full h-14 pl-12 pr-4 rounded-xl bg-muted border-2 border-transparent focus:ring-0 focus:border-primary/50 outline-none",
                       errors.location && "border-destructive"
@@ -452,7 +574,7 @@ export default function Auth() {
                     type="number"
                     value={landArea}
                     onChange={(e) => setLandArea(e.target.value)}
-                    placeholder="Total land area (in acres)"
+                    placeholder={t("landArea")}
                     className={cn(
                       "w-full h-14 pl-12 pr-4 rounded-xl bg-muted border-2 border-transparent focus:ring-0 focus:border-primary/50 outline-none",
                       errors.landArea && "border-destructive"
@@ -474,7 +596,7 @@ export default function Auth() {
                       !soilType && "text-muted-foreground"
                     )}
                   >
-                    <option value="">Select soil type</option>
+                    <option value="">{t("soilType")}</option>
                     {soilTypes.map((type) => (
                       <option key={type} value={type}>{type}</option>
                     ))}
@@ -494,7 +616,7 @@ export default function Auth() {
                       !waterSource && "text-muted-foreground"
                     )}
                   >
-                    <option value="">Select water source (optional)</option>
+                    <option value="">{t("waterSource")} (optional)</option>
                     {waterSources.map((source) => (
                       <option key={source} value={source}>{source}</option>
                     ))}
@@ -507,7 +629,7 @@ export default function Auth() {
                 className="w-full"
                 onClick={() => setSignupStep(1)}
               >
-                ← Back to personal details
+                ← {t("back")}
               </Button>
             </>
           )}
@@ -523,10 +645,12 @@ export default function Auth() {
             ) : (
               <>
                 {mode === "signin" 
-                  ? "Sign In" 
-                  : signupStep === 1 
-                    ? "Next" 
-                    : "Create Account"}
+                  ? t("signIn")
+                  : signupStep === 0
+                    ? t("continueBtn")
+                    : signupStep === 1 
+                      ? t("next")
+                      : t("createAccount")}
                 <ArrowRight className="w-5 h-5 ml-2" />
               </>
             )}

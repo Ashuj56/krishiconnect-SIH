@@ -1,16 +1,19 @@
-import { Home, MessageCircle, Calendar, Scan, User } from "lucide-react";
+import { Home, MessageCircle, Calendar, Scan } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
-
-const navItems = [
-  { icon: Home, label: "ഹോം", labelEn: "Home", path: "/" },
-  { icon: MessageCircle, label: "ചാറ്റ്", labelEn: "Chat", path: "/chat" },
-  { icon: Scan, label: "സ്കാൻ", labelEn: "Scan", path: "/scanner" },
-  { icon: Calendar, label: "ലോഗ്", labelEn: "Activity", path: "/activities" },
-  { icon: User, label: "പ്രൊഫൈൽ", labelEn: "Profile", path: "/profile" },
-];
+import { useLanguage } from "@/contexts/LanguageContext";
+import { MobileMenu } from "./MobileMenu";
 
 export function BottomNav() {
+  const { t } = useLanguage();
+
+  const navItems = [
+    { icon: Home, labelKey: "home", path: "/" },
+    { icon: MessageCircle, labelKey: "chat", path: "/chat" },
+    { icon: Scan, labelKey: "scan", path: "/scanner" },
+    { icon: Calendar, labelKey: "activities", path: "/activities" },
+  ];
+
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/98 backdrop-blur-xl border-t border-border/50 safe-bottom md:hidden shadow-lg">
       <div className="flex items-center justify-around h-[72px] px-2">
@@ -50,12 +53,15 @@ export function BottomNav() {
                   "text-[10px] font-medium font-malayalam transition-all duration-200",
                   isActive && "font-semibold"
                 )}>
-                  {item.label}
+                  {t(item.labelKey)}
                 </span>
               </>
             )}
           </NavLink>
         ))}
+        
+        {/* Menu button for resources */}
+        <MobileMenu />
       </div>
     </nav>
   );
