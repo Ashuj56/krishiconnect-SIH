@@ -56,17 +56,19 @@ export function WeatherWidget() {
         .single();
 
       // Get location from farm if not in profile
-      let location = profile?.location;
-      if (!location) {
+      let village = profile?.location;
+      if (!village) {
         const { data: farm } = await supabase
           .from('farms')
           .select('location')
           .eq('user_id', user.id)
           .limit(1)
           .single();
-        location = farm?.location;
+        village = farm?.location;
       }
 
+      // Format location as "Village, Kerala, India" for better geocoding
+      const location = village ? `${village}, Kerala, India` : null;
       if (!location) {
         setError("Please add your location in profile settings");
         setLoading(false);
