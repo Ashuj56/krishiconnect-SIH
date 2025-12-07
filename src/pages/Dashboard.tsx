@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { MapPin, Bell, Mic, FileText, Calendar, MessageCircle, Sprout, AlertTriangle, TrendingUp, CloudRain, Bug } from "lucide-react";
+import { MapPin, Bell, Mic, FileText, Calendar, MessageCircle, Sprout, AlertTriangle, TrendingUp, CloudRain, Bug, FlaskConical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { WeatherWidget } from "@/components/dashboard/WeatherWidget";
@@ -35,10 +35,10 @@ const quickActions = [
     gradient: "from-primary to-primary/80"
   },
   { 
-    icon: FileText, 
-    label: "ലോഗ്", 
-    labelEn: "Log", 
-    path: "/activities", 
+    icon: FlaskConical, 
+    label: "മണ്ണ്", 
+    labelEn: "Soil", 
+    path: "/soil-analysis", 
     color: "bg-secondary",
     gradient: "from-secondary to-secondary/80"
   },
