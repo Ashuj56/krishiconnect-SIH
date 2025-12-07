@@ -2,7 +2,6 @@ import { Home, MessageCircle, Calendar, Scan, Sun, TrendingUp, FileText, BookOpe
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 export function BottomNav() {
   const { t } = useLanguage();
@@ -23,8 +22,8 @@ export function BottomNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/98 backdrop-blur-xl border-t border-border/50 safe-bottom md:hidden shadow-lg">
-      <ScrollArea className="w-full">
-        <div className="flex items-center h-[72px] px-2 gap-1">
+      <div className="relative">
+        <div className="flex items-center h-[72px] px-2 gap-1 overflow-x-auto scrollbar-hide">
           {navItems.map((item) => (
             <NavLink
               key={item.path}
@@ -68,8 +67,9 @@ export function BottomNav() {
             </NavLink>
           ))}
         </div>
-        <ScrollBar orientation="horizontal" className="h-1" />
-      </ScrollArea>
+        {/* Gradient fade indicator on the right */}
+        <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-card/98 to-transparent pointer-events-none" />
+      </div>
     </nav>
   );
 }
