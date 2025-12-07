@@ -338,6 +338,39 @@ export type Database = {
           },
         ]
       }
+      soil_reports: {
+        Row: {
+          created_at: string
+          id: string
+          nitrogen: number
+          ph: number
+          phosphorus: number
+          potassium: number
+          status_json: Json | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nitrogen: number
+          ph: number
+          phosphorus: number
+          potassium: number
+          status_json?: Json | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nitrogen?: number
+          ph?: number
+          phosphorus?: number
+          potassium?: number
+          status_json?: Json | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       tasks: {
         Row: {
           completed: boolean | null
