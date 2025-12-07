@@ -153,19 +153,19 @@ export default function Dashboard() {
     <div className="min-h-screen bg-background kerala-pattern">
       {/* Header Banner */}
       <header className="sticky top-0 z-40 gradient-kerala text-primary-foreground safe-top">
-        <div className="px-4 py-5">
+        <div className="px-4 py-3">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-sm text-primary-foreground/80 font-malayalam">
+              <p className="text-xs text-primary-foreground/80 font-malayalam">
                 {greeting.ml}
               </p>
-              <h1 className="text-2xl font-bold flex items-center gap-2 mt-1">
+              <h1 className="text-lg font-bold flex items-center gap-1.5 mt-0.5">
                 Hello, {userName}! 
-                <span className="animate-wave inline-block">👋</span>
+                <span className="animate-wave inline-block text-base">👋</span>
               </h1>
               {farmInfo && (
-                <div className="flex items-center gap-2 mt-2 text-sm text-primary-foreground/90">
-                  <Sprout className="w-4 h-4" />
+                <div className="flex items-center gap-1.5 mt-1 text-xs text-primary-foreground/90">
+                  <Sprout className="w-3 h-3" />
                   <span>
                     {farmInfo.name} • {farmInfo.area} {farmInfo.areaUnit}
                   </span>
@@ -179,7 +179,7 @@ export default function Dashboard() {
         </div>
 
         {/* Wavy Divider */}
-        <div className="h-6 wavy-divider" />
+        <div className="h-4 wavy-divider" />
       </header>
 
       {/* Main Content */}

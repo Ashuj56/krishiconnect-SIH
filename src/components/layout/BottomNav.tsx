@@ -7,17 +7,17 @@ export function BottomNav() {
   const { t } = useLanguage();
 
   const navItems = [
-    { icon: LayoutDashboard, labelKey: "home", path: "/" },
-    { icon: Bot, labelKey: "chat", path: "/chat" },
-    { icon: ScanLine, labelKey: "scan", path: "/scanner" },
-    { icon: CalendarCheck, labelKey: "activities", path: "/activities" },
-    { icon: Lightbulb, labelKey: "advisory", path: "/advisory" },
-    { icon: IndianRupee, labelKey: "marketPrices", path: "/market" },
-    { icon: ScrollText, labelKey: "schemes", path: "/schemes" },
-    { icon: GraduationCap, labelKey: "knowledge", path: "/knowledge" },
-    { icon: Wheat, labelKey: "farm", path: "/farm" },
-    { icon: CircleUser, labelKey: "profile", path: "/profile" },
-    { icon: SlidersHorizontal, labelKey: "settings", path: "/settings" },
+    { icon: LayoutDashboard, labelKey: "home", path: "/", color: "text-emerald-500" },
+    { icon: Bot, labelKey: "chat", path: "/chat", color: "text-violet-500" },
+    { icon: ScanLine, labelKey: "scan", path: "/scanner", color: "text-cyan-500" },
+    { icon: CalendarCheck, labelKey: "activities", path: "/activities", color: "text-orange-500" },
+    { icon: Lightbulb, labelKey: "advisory", path: "/advisory", color: "text-amber-500" },
+    { icon: IndianRupee, labelKey: "marketPrices", path: "/market", color: "text-green-600" },
+    { icon: ScrollText, labelKey: "schemes", path: "/schemes", color: "text-blue-500" },
+    { icon: GraduationCap, labelKey: "knowledge", path: "/knowledge", color: "text-purple-500" },
+    { icon: Wheat, labelKey: "farm", path: "/farm", color: "text-yellow-600" },
+    { icon: CircleUser, labelKey: "profile", path: "/profile", color: "text-pink-500" },
+    { icon: SlidersHorizontal, labelKey: "settings", path: "/settings", color: "text-slate-500" },
   ];
 
   return (
@@ -41,7 +41,7 @@ export function BottomNav() {
                 <>
                   <div
                     className={cn(
-                      "relative p-2 rounded-xl transition-all duration-300",
+                      "relative p-1.5 rounded-xl transition-all duration-300",
                       isActive && "bg-primary/10 scale-110"
                     )}
                   >
@@ -51,7 +51,7 @@ export function BottomNav() {
                     <item.icon 
                       className={cn(
                         "w-5 h-5 relative z-10 transition-transform duration-300",
-                        isActive && "animate-bounce-subtle"
+                        isActive ? "text-primary" : item.color
                       )} 
                       strokeWidth={isActive ? 2.5 : 2}
                     />
