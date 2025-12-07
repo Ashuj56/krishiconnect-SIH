@@ -1,4 +1,4 @@
-import { Home, MessageCircle, Calendar, Scan, Sun, TrendingUp, FileText, BookOpen, User, Settings, Tractor } from "lucide-react";
+import { LayoutDashboard, Bot, ScanLine, CalendarCheck, Lightbulb, IndianRupee, ScrollText, GraduationCap, Wheat, CircleUser, SlidersHorizontal } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -7,17 +7,17 @@ export function BottomNav() {
   const { t } = useLanguage();
 
   const navItems = [
-    { icon: Home, labelKey: "home", path: "/" },
-    { icon: MessageCircle, labelKey: "chat", path: "/chat" },
-    { icon: Scan, labelKey: "scan", path: "/scanner" },
-    { icon: Calendar, labelKey: "activities", path: "/activities" },
-    { icon: Sun, labelKey: "advisory", path: "/advisory" },
-    { icon: TrendingUp, labelKey: "marketPrices", path: "/market" },
-    { icon: FileText, labelKey: "schemes", path: "/schemes" },
-    { icon: BookOpen, labelKey: "knowledge", path: "/knowledge" },
-    { icon: Tractor, labelKey: "farm", path: "/farm" },
-    { icon: User, labelKey: "profile", path: "/profile" },
-    { icon: Settings, labelKey: "settings", path: "/settings" },
+    { icon: LayoutDashboard, labelKey: "home", path: "/" },
+    { icon: Bot, labelKey: "chat", path: "/chat" },
+    { icon: ScanLine, labelKey: "scan", path: "/scanner" },
+    { icon: CalendarCheck, labelKey: "activities", path: "/activities" },
+    { icon: Lightbulb, labelKey: "advisory", path: "/advisory" },
+    { icon: IndianRupee, labelKey: "marketPrices", path: "/market" },
+    { icon: ScrollText, labelKey: "schemes", path: "/schemes" },
+    { icon: GraduationCap, labelKey: "knowledge", path: "/knowledge" },
+    { icon: Wheat, labelKey: "farm", path: "/farm" },
+    { icon: CircleUser, labelKey: "profile", path: "/profile" },
+    { icon: SlidersHorizontal, labelKey: "settings", path: "/settings" },
   ];
 
   return (
