@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { MapPin, Bell, Mic, FileText, Calendar, MessageCircle, Sprout, AlertTriangle, TrendingUp, CloudRain, Bug, FlaskConical } from "lucide-react";
+import { Mic, Calendar, MessageCircle, Sprout, FlaskConical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { WeatherWidget } from "@/components/dashboard/WeatherWidget";
 import { NotificationCenter } from "@/components/notifications/NotificationCenter";
+import { PersonalizedAdvisory } from "@/components/dashboard/PersonalizedAdvisory";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
