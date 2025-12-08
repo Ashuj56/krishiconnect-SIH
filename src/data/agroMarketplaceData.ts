@@ -626,3 +626,37 @@ export const getLocationCoordinates = (locationName: string): { lat: number; lng
   const location = vendorLocations[locationKey];
   return location ? { lat: location.lat, lng: location.lng } : { lat: 10.5276, lng: 76.2144 }; // Default to Thrissur
 };
+
+// Combined vendors array for microfinance integration
+export interface VendorWithProducts {
+  id: string;
+  name: string;
+  rating: number;
+  location: string;
+  deliveryTime: string;
+  category: string;
+}
+
+export const vendors: VendorWithProducts[] = [
+  ...pesticidesVendors.map(v => ({ id: v.id.toString(), name: v.name, rating: v.rating, location: v.location, deliveryTime: v.deliveryTime, category: 'Pesticides' })),
+  ...fertilizersVendors.map(v => ({ id: v.id.toString(), name: v.name, rating: v.rating, location: v.location, deliveryTime: v.deliveryTime, category: 'Fertilizers' })),
+  ...seedsVendors.map(v => ({ id: v.id.toString(), name: v.name, rating: v.rating, location: v.location, deliveryTime: v.deliveryTime, category: 'Seeds' })),
+  ...equipmentVendors.map(v => ({ id: v.id.toString(), name: v.name, rating: v.rating, location: v.location, deliveryTime: v.deliveryTime, category: 'Equipment' })),
+];
+
+// Vendor products for display
+export interface VendorProduct {
+  id: string;
+  vendorId: string;
+  name: string;
+  price: number;
+  type: string;
+  inStock: boolean;
+}
+
+export const vendorProducts: VendorProduct[] = [
+  ...pesticidesVendors.flatMap(v => v.products.map((p, idx) => ({ id: `${v.id}-${idx}`, vendorId: v.id.toString(), name: p.name, price: p.price, type: p.type, inStock: p.inStock }))),
+  ...fertilizersVendors.flatMap(v => v.products.map((p, idx) => ({ id: `${v.id}-${idx}`, vendorId: v.id.toString(), name: p.name, price: p.price, type: p.type, inStock: p.inStock }))),
+  ...seedsVendors.flatMap(v => v.products.map((p, idx) => ({ id: `${v.id}-${idx}`, vendorId: v.id.toString(), name: p.name, price: p.price, type: p.type, inStock: p.inStock }))),
+  ...equipmentVendors.flatMap(v => v.products.map((p, idx) => ({ id: `${v.id}-${idx}`, vendorId: v.id.toString(), name: p.name, price: p.price, type: p.type, inStock: p.inStock }))),
+];
