@@ -10,22 +10,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, IndianRupee, TrendingUp, AlertCircle, CheckCircle2 } from "lucide-react";
 import { loanPurposes, cropStageFactors, calculateEligibility, calculateEMI, generateRepaymentSchedule, type EligibilityResult } from "@/data/microfinanceData";
-import { vendors } from "@/data/agroMarketplaceData";
 
-interface Crop {
+interface MoneyLender {
   id: string;
-  name: string;
-  current_stage: string | null;
-  area: number | null;
-}
-
-interface Lender {
-  id: string;
-  name: string;
-  interest_rate: number;
-  loan_limit: number;
-  processing_fee: number;
-  description: string | null;
+  business_name: string;
+  license_holder: string;
+  interest_rate: number | null;
+  loan_term_months: number | null;
+  district: string;
+  contact_no: string | null;
 }
 
 interface SoilReport {
@@ -41,19 +34,16 @@ export function LoanRequestForm({ onSuccess, maxLoanAmount }: { onSuccess?: () =
   
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [crops, setCrops] = useState<Crop[]>([]);
-  const [lenders, setLenders] = useState<Lender[]>([]);
+  const [moneyLenders, setMoneyLenders] = useState<MoneyLender[]>([]);
   const [soilReport, setSoilReport] = useState<SoilReport | null>(null);
   const [landArea, setLandArea] = useState<number>(0);
   const [pastLoansCount, setPastLoansCount] = useState(0);
   
   // Form state
-  const [selectedCrop, setSelectedCrop] = useState<string>("");
   const [cropStage, setCropStage] = useState<string>("vegetative");
   const [purpose, setPurpose] = useState<string>("");
   const [requestedAmount, setRequestedAmount] = useState<string>("");
   const [selectedLender, setSelectedLender] = useState<string>("");
-  const [selectedVendor, setSelectedVendor] = useState<string>("");
   const [notes, setNotes] = useState<string>("");
   
   // Eligibility result
@@ -69,19 +59,13 @@ export function LoanRequestForm({ onSuccess, maxLoanAmount }: { onSuccess?: () =
   const loadData = async () => {
     setLoading(true);
     try {
-      // Load crops
-      const { data: cropsData } = await supabase
-        .from('crops')
-        .select('id, name, current_stage, area')
-        .eq('user_id', user!.id);
-      setCrops(cropsData || []);
-
-      // Load lenders
+      // Load money lenders from microfinance_vendors
       const { data: lendersData } = await supabase
-        .from('lenders')
-        .select('*')
+        .from('microfinance_vendors')
+        .select('id, business_name, license_holder, interest_rate, loan_term_months, district, contact_no')
+        .eq('is_verified', true)
         .order('interest_rate');
-      setLenders(lendersData || []);
+      setMoneyLenders(lendersData || []);
 
       // Load latest soil report
       const { data: soilData } = await supabase
@@ -135,29 +119,17 @@ export function LoanRequestForm({ onSuccess, maxLoanAmount }: { onSuccess?: () =
     }
   }, [requestedAmount, cropStage, soilReport, landArea, pastLoansCount]);
 
-  // Auto-set crop stage when crop is selected
-  useEffect(() => {
-    if (selectedCrop) {
-      const crop = crops.find(c => c.id === selectedCrop);
-      if (crop?.current_stage) {
-        setCropStage(crop.current_stage.toLowerCase());
-      }
-    }
-  }, [selectedCrop, crops]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !eligibility?.isEligible) return;
 
     setSubmitting(true);
     try {
-      const selectedCropData = crops.find(c => c.id === selectedCrop);
-      const selectedLenderData = lenders.find(l => l.id === selectedLender);
-      const selectedVendorData = vendors.find(v => v.id === selectedVendor);
+      const selectedLenderData = moneyLenders.find(l => l.id === selectedLender);
       
       const approvedAmount = Math.min(parseFloat(requestedAmount), eligibility.maxEligibleAmount);
       const interestRate = selectedLenderData?.interest_rate || eligibility.recommendedInterestRate;
-      const duration = eligibility.recommendedDuration;
+      const duration = selectedLenderData?.loan_term_months || eligibility.recommendedDuration;
       const emi = calculateEMI(approvedAmount, interestRate, duration);
       
       const startDate = new Date();
@@ -169,10 +141,10 @@ export function LoanRequestForm({ onSuccess, maxLoanAmount }: { onSuccess?: () =
         .from('farmer_loans')
         .insert({
           user_id: user.id,
-          lender_id: selectedLender || null,
-          crop_id: selectedCrop || null,
+          lender_id: null,
+          crop_id: null,
           purpose,
-          crop_name: selectedCropData?.name || null,
+          crop_name: null,
           requested_amount: parseFloat(requestedAmount),
           approved_amount: approvedAmount,
           interest_rate: interestRate,
@@ -181,8 +153,8 @@ export function LoanRequestForm({ onSuccess, maxLoanAmount }: { onSuccess?: () =
           start_date: startDate.toISOString().split('T')[0],
           next_due_date: nextDueDate.toISOString().split('T')[0],
           status: 'pending',
-          vendor_id: selectedVendor || null,
-          vendor_name: selectedVendorData?.name || null,
+          vendor_id: selectedLender || null,
+          vendor_name: selectedLenderData?.business_name || null,
           eligibility_score: eligibility.eligibilityScore,
         })
         .select()
@@ -213,11 +185,9 @@ export function LoanRequestForm({ onSuccess, maxLoanAmount }: { onSuccess?: () =
       });
 
       // Reset form
-      setSelectedCrop("");
       setPurpose("");
       setRequestedAmount("");
       setSelectedLender("");
-      setSelectedVendor("");
       setNotes("");
       
       onSuccess?.();
@@ -234,15 +204,6 @@ export function LoanRequestForm({ onSuccess, maxLoanAmount }: { onSuccess?: () =
     }
   };
 
-  // Filter vendors based on purpose
-  const filteredVendors = vendors.filter(v => {
-    if (purpose === 'fertilizers') return v.category === 'Fertilizers';
-    if (purpose === 'pesticides') return v.category === 'Pesticides';
-    if (purpose === 'seeds') return v.category === 'Seeds';
-    if (purpose === 'equipment' || purpose === 'irrigation') return v.category === 'Equipment';
-    return true;
-  });
-
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -253,47 +214,29 @@ export function LoanRequestForm({ onSuccess, maxLoanAmount }: { onSuccess?: () =
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Crop Selection */}
+      {/* Purpose Section */}
       <Card>
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
             <span className="text-2xl">🌾</span>
-            Crop & Purpose
+            Purpose
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="crop">Select Crop (Optional)</Label>
-              <Select value={selectedCrop} onValueChange={setSelectedCrop}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Choose your crop" />
-                </SelectTrigger>
-                <SelectContent>
-                  {crops.map(crop => (
-                    <SelectItem key={crop.id} value={crop.id}>
-                      {crop.name} {crop.current_stage && `(${crop.current_stage})`}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="stage">Crop Stage</Label>
-              <Select value={cropStage} onValueChange={setCropStage}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select crop stage" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(cropStageFactors).map(([key, value]) => (
-                    <SelectItem key={key} value={key}>
-                      {value.label} - {value.description}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="stage">Crop Stage</Label>
+            <Select value={cropStage} onValueChange={setCropStage}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select crop stage" />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(cropStageFactors).map(([key, value]) => (
+                  <SelectItem key={key} value={key}>
+                    {value.label} - {value.description}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
@@ -387,52 +330,31 @@ export function LoanRequestForm({ onSuccess, maxLoanAmount }: { onSuccess?: () =
         </CardContent>
       </Card>
 
-      {/* Lender & Vendor Selection */}
+      {/* Money Lender Selection */}
       {eligibility?.isEligible && (
         <Card>
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
               <TrendingUp className="h-5 w-5" />
-              Lender & Vendor
+              Select Money Lender
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="lender">Select Lender</Label>
+              <Label htmlFor="lender">Choose Money Lender</Label>
               <Select value={selectedLender} onValueChange={setSelectedLender}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Choose a lender" />
+                  <SelectValue placeholder="Select a money lender" />
                 </SelectTrigger>
                 <SelectContent>
-                  {lenders.map(lender => (
+                  {moneyLenders.map(lender => (
                     <SelectItem key={lender.id} value={lender.id}>
-                      {lender.name} - {lender.interest_rate}% (Up to ₹{lender.loan_limit.toLocaleString()})
+                      {lender.business_name} - {lender.interest_rate}% ({lender.loan_term_months} months) - {lender.district}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-
-            {purpose && filteredVendors.length > 0 && (
-              <div className="space-y-2">
-                <Label htmlFor="vendor">Select Vendor (Loan will be disbursed to vendor)</Label>
-                <Select value={selectedVendor} onValueChange={setSelectedVendor}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Choose a vendor" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {filteredVendors.map(vendor => (
-                      <SelectItem key={vendor.id} value={vendor.id}>
-                        {vendor.name} - ⭐ {vendor.rating} ({vendor.location})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground">
-                  The loan amount will be directly disbursed to the selected vendor for your purchase.
-                </p>
-              </div>
-            )}
 
             <div className="space-y-2">
               <Label htmlFor="notes">Additional Notes (Optional)</Label>
