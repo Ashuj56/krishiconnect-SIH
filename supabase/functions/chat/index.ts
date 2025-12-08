@@ -5,11 +5,23 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Language instructions
-const languageInstructions: Record<string, string> = {
-  'en': 'Respond in English. Use simple, easy to understand language suitable for farmers.',
-  'ml': 'Always respond in Malayalam (മലയാളം). Use the Malayalam script. ഉത്തരം മലയാളത്തിൽ നൽകുക.',
-  'hi': 'Always respond in Hindi (हिंदी). Use the Devanagari script. कृपया हिंदी में जवाब दें।',
+// Strict language instructions - MUST be followed
+const languageInstructions: Record<string, { instruction: string; name: string; script: string }> = {
+  'en': {
+    instruction: 'You MUST respond ONLY in English. Do not use any other language. Use simple, clear language suitable for farmers.',
+    name: 'English',
+    script: 'Latin'
+  },
+  'ml': {
+    instruction: 'നിങ്ങൾ മലയാളത്തിൽ മാത്രം മറുപടി നൽകണം. മലയാളം ലിപി ഉപയോഗിക്കുക. ഇംഗ്ലീഷ് അല്ലെങ്കിൽ മറ്റ് ഭാഷകൾ ഉപയോഗിക്കരുത്. You MUST respond ONLY in Malayalam using Malayalam script. Do NOT use English or any other language.',
+    name: 'Malayalam (മലയാളം)',
+    script: 'Malayalam'
+  },
+  'hi': {
+    instruction: 'आपको केवल हिंदी में जवाब देना होगा। देवनागरी लिपि का उपयोग करें। अंग्रेजी या अन्य भाषाओं का उपयोग न करें। You MUST respond ONLY in Hindi using Devanagari script. Do NOT use English or any other language.',
+    name: 'Hindi (हिंदी)',
+    script: 'Devanagari'
+  },
 };
 
 serve(async (req) => {
@@ -30,12 +42,18 @@ serve(async (req) => {
     console.log("Language:", language);
 
     // Get language instruction
-    const langInstruction = languageInstructions[language] || languageInstructions['en'];
+    const langConfig = languageInstructions[language] || languageInstructions['en'];
 
-    // Build personalized system prompt with farmer context
-    let systemPrompt = `You are Krishi Mitra (കൃഷി മിത്ര / कृषि मित्र), a helpful AI farming assistant for Indian farmers. 
+    // Build personalized system prompt with STRICT language enforcement
+    let systemPrompt = `You are Krishi Mitra (കൃഷി മിത്ര / कृषि मित्र), a helpful AI farming assistant for Indian farmers.
 
-IMPORTANT LANGUAGE INSTRUCTION: ${langInstruction}
+=== CRITICAL LANGUAGE REQUIREMENT ===
+${langConfig.instruction}
+
+The farmer has selected ${langConfig.name} as their preferred language.
+ALL your responses MUST be written ENTIRELY in ${langConfig.name} using the ${langConfig.script} script.
+This is NON-NEGOTIABLE. Even technical terms should be translated or transliterated.
+=== END LANGUAGE REQUIREMENT ===
 
 You provide advice on:
 - Crop management and best practices
@@ -46,7 +64,7 @@ You provide advice on:
 - Government schemes and subsidies for farmers
 - Market prices and selling strategies
 
-Always be helpful, practical, and consider the Indian farming context. Provide responses in the farmer's preferred language.`;
+Be helpful, practical, and consider the Indian farming context.`;
 
     // Add personalized farmer context if available
     if (farmerContext) {
@@ -88,8 +106,11 @@ Always be helpful, practical, and consider the Indian farming context. Provide r
       }
       
       systemPrompt += `\n\n--- END OF FARMER PROFILE ---`;
-      systemPrompt += `\n\nUse the above information to provide personalized advice. Address the farmer by name when appropriate. Consider their specific crops, location, and recent activities when giving recommendations. Remember to always respond in ${language === 'ml' ? 'Malayalam' : language === 'hi' ? 'Hindi' : 'English'}.`;
+      systemPrompt += `\n\nUse the above information to provide personalized advice. Address the farmer by name when appropriate. Consider their specific crops, location, and recent activities when giving recommendations.`;
     }
+    
+    // Final language reminder
+    systemPrompt += `\n\n=== REMINDER: Respond ONLY in ${langConfig.name} (${langConfig.script} script). This is mandatory. ===`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
