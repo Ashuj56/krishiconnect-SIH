@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
-import { User, Phone, Mail, MapPin, Edit2, Camera, LogOut, ChevronRight, Award, Loader2 } from "lucide-react";
+import { User, Phone, Mail, MapPin, Edit2, Camera, LogOut, ChevronRight, Award, Loader2, Check, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,6 +16,12 @@ interface ProfileData {
   location: string | null;
   avatar_url: string | null;
 }
+
+const KERALA_DISTRICTS = [
+  "Alappuzha", "Ernakulam", "Idukki", "Kannur", "Kasaragod",
+  "Kollam", "Kottayam", "Kozhikode", "Malappuram", "Palakkad",
+  "Pathanamthitta", "Thiruvananthapuram", "Thrissur", "Wayanad"
+];
 
 const achievements = [
   { icon: "🌾", title: "First Harvest Logged", date: "Apr 2024" },
@@ -27,6 +36,14 @@ export default function Profile() {
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [signingOut, setSigningOut] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  
+  // Edit form state
+  const [editName, setEditName] = useState("");
+  const [editPhone, setEditPhone] = useState("");
+  const [editVillage, setEditVillage] = useState("");
+  const [editDistrict, setEditDistrict] = useState("");
 
   useEffect(() => {
     if (!user) return;
@@ -40,12 +57,88 @@ export default function Profile() {
 
       if (data) {
         setProfile(data);
+        // Parse location into village and district
+        if (data.location) {
+          const parts = data.location.split(", ");
+          if (parts.length >= 2) {
+            setEditVillage(parts[0]);
+            setEditDistrict(parts[1]);
+          } else {
+            setEditVillage(data.location);
+          }
+        }
+        setEditName(data.full_name || "");
+        setEditPhone(data.phone || "");
       }
       setLoading(false);
     };
 
     loadProfile();
   }, [user]);
+
+  const handleStartEdit = () => {
+    setEditName(profile?.full_name || "");
+    setEditPhone(profile?.phone || "");
+    if (profile?.location) {
+      const parts = profile.location.split(", ");
+      if (parts.length >= 2) {
+        setEditVillage(parts[0]);
+        setEditDistrict(parts[1]);
+      } else {
+        setEditVillage(profile.location);
+        setEditDistrict("");
+      }
+    }
+    setIsEditing(true);
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+  };
+
+  const handleSaveProfile = async () => {
+    if (!user) return;
+    
+    setSaving(true);
+    try {
+      const locationString = editVillage && editDistrict 
+        ? `${editVillage}, ${editDistrict}, Kerala, India`
+        : editVillage || editDistrict || null;
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          full_name: editName.trim() || null,
+          phone: editPhone.trim() || null,
+          location: locationString,
+        })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      setProfile({
+        ...profile,
+        full_name: editName.trim() || null,
+        phone: editPhone.trim() || null,
+        location: locationString,
+        avatar_url: profile?.avatar_url || null,
+      });
+
+      setIsEditing(false);
+      toast({
+        title: "Profile updated",
+        description: "Your profile has been saved successfully.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update profile. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const handleSignOut = async () => {
     setSigningOut(true);
@@ -86,10 +179,36 @@ export default function Profile() {
       <header className="sticky top-0 z-40 bg-card border-b border-border safe-top">
         <div className="flex items-center justify-between px-4 py-3">
           <h1 className="text-xl font-bold">My Profile</h1>
-          <Button variant="outline" size="sm">
-            <Edit2 className="w-4 h-4 mr-2" />
-            Edit
-          </Button>
+          {isEditing ? (
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleCancelEdit}
+                disabled={saving}
+              >
+                <X className="w-4 h-4 mr-1" />
+                Cancel
+              </Button>
+              <Button 
+                size="sm" 
+                onClick={handleSaveProfile}
+                disabled={saving}
+              >
+                {saving ? (
+                  <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                ) : (
+                  <Check className="w-4 h-4 mr-1" />
+                )}
+                Save
+              </Button>
+            </div>
+          ) : (
+            <Button variant="outline" size="sm" onClick={handleStartEdit}>
+              <Edit2 className="w-4 h-4 mr-2" />
+              Edit
+            </Button>
+          )}
         </div>
       </header>
 
@@ -106,25 +225,45 @@ export default function Profile() {
                   <Camera className="w-4 h-4" />
                 </button>
               </div>
-              <h2 className="text-xl font-bold mt-4">{displayName}</h2>
-              <p className="text-sm text-muted-foreground">Member since {memberSince}</p>
               
-              <div className="flex gap-4 mt-4 text-center">
-                <div>
-                  <p className="text-2xl font-bold text-primary">--</p>
-                  <p className="text-xs text-muted-foreground">Farm Size</p>
+              {isEditing ? (
+                <div className="w-full mt-4 space-y-3">
+                  <div className="text-left">
+                    <Label htmlFor="name">Full Name</Label>
+                    <Input
+                      id="name"
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      placeholder="Enter your full name"
+                      className="mt-1"
+                    />
+                  </div>
                 </div>
-                <div className="w-px bg-border" />
-                <div>
-                  <p className="text-2xl font-bold text-primary">0</p>
-                  <p className="text-xs text-muted-foreground">Active Crops</p>
+              ) : (
+                <>
+                  <h2 className="text-xl font-bold mt-4">{displayName}</h2>
+                  <p className="text-sm text-muted-foreground">Member since {memberSince}</p>
+                </>
+              )}
+              
+              {!isEditing && (
+                <div className="flex gap-4 mt-4 text-center">
+                  <div>
+                    <p className="text-2xl font-bold text-primary">--</p>
+                    <p className="text-xs text-muted-foreground">Farm Size</p>
+                  </div>
+                  <div className="w-px bg-border" />
+                  <div>
+                    <p className="text-2xl font-bold text-primary">0</p>
+                    <p className="text-xs text-muted-foreground">Active Crops</p>
+                  </div>
+                  <div className="w-px bg-border" />
+                  <div>
+                    <p className="text-2xl font-bold text-primary">0</p>
+                    <p className="text-xs text-muted-foreground">Activities</p>
+                  </div>
                 </div>
-                <div className="w-px bg-border" />
-                <div>
-                  <p className="text-2xl font-bold text-primary">0</p>
-                  <p className="text-xs text-muted-foreground">Activities</p>
-                </div>
-              </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -135,33 +274,76 @@ export default function Profile() {
             <CardTitle>Contact Information</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                <Phone className="w-5 h-5 text-primary" />
+            {isEditing ? (
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="phone">Phone Number</Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    value={editPhone}
+                    onChange={(e) => setEditPhone(e.target.value)}
+                    placeholder="Enter your phone number"
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="village">Village/Town</Label>
+                  <Input
+                    id="village"
+                    value={editVillage}
+                    onChange={(e) => setEditVillage(e.target.value)}
+                    placeholder="Enter your village or town"
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="district">District</Label>
+                  <Select value={editDistrict} onValueChange={setEditDistrict}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Select your district" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {KERALA_DISTRICTS.map((district) => (
+                        <SelectItem key={district} value={district}>
+                          {district}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Phone</p>
-                <p className="font-medium">{profile?.phone || 'Not set'}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                <Mail className="w-5 h-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Email</p>
-                <p className="font-medium">{user?.email || 'Not set'}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                <MapPin className="w-5 h-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Location</p>
-                <p className="font-medium">{profile?.location || 'Not set'}</p>
-              </div>
-            </div>
+            ) : (
+              <>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <Phone className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Phone</p>
+                    <p className="font-medium">{profile?.phone || 'Not set'}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <Mail className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Email</p>
+                    <p className="font-medium">{user?.email || 'Not set'}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <MapPin className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Location</p>
+                    <p className="font-medium">{profile?.location || 'Not set'}</p>
+                  </div>
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
 
