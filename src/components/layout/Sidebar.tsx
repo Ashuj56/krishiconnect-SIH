@@ -8,7 +8,8 @@ import {
   BookOpen, 
   FileText,
   Settings,
-  Sun
+  Sun,
+  Bug
 } from "lucide-react";
 import krishiConnectLogo from "@/assets/krishi-connect-logo.jpg";
 import { NavLink } from "react-router-dom";
@@ -27,6 +28,7 @@ const mainNavItems = [
 const secondaryNavItems = [
   { icon: Sun, label: "Advisory", path: "/advisory" },
   { icon: TrendingUp, label: "Market Prices", path: "/market" },
+  { icon: Bug, label: "Pesticides", path: "/pesticides" },
   { icon: FileText, label: "Schemes", path: "/schemes" },
   { icon: BookOpen, label: "Knowledge Base", path: "/knowledge" },
 ];
