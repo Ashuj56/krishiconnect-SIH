@@ -399,32 +399,44 @@ export type Database = {
         Row: {
           business_address: string
           business_name: string
+          contact_no: string | null
           created_at: string
           district: string
+          email: string | null
           id: string
+          interest_rate: number | null
           is_verified: boolean
           license_holder: string
           license_number: string
+          loan_term_months: number | null
         }
         Insert: {
           business_address: string
           business_name: string
+          contact_no?: string | null
           created_at?: string
           district: string
+          email?: string | null
           id?: string
+          interest_rate?: number | null
           is_verified?: boolean
           license_holder: string
           license_number: string
+          loan_term_months?: number | null
         }
         Update: {
           business_address?: string
           business_name?: string
+          contact_no?: string | null
           created_at?: string
           district?: string
+          email?: string | null
           id?: string
+          interest_rate?: number | null
           is_verified?: boolean
           license_holder?: string
           license_number?: string
+          loan_term_months?: number | null
         }
         Relationships: []
       }
