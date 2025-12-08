@@ -35,7 +35,7 @@ interface SoilReport {
   potassium: number;
 }
 
-export function LoanRequestForm({ onSuccess }: { onSuccess?: () => void }) {
+export function LoanRequestForm({ onSuccess, maxLoanAmount }: { onSuccess?: () => void; maxLoanAmount?: number }) {
   const { user } = useAuth();
   const { toast } = useToast();
   
