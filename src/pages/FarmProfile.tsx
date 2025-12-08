@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { keralaDistricts, getSoilTypesForDistrict, getPrimarySoilType } from "@/data/keralaSoilMapping";
 
 interface Farm {
   id: string;
@@ -28,27 +29,8 @@ interface Crop {
   health_status: string | null;
 }
 
-const soilTypes = ["Alluvial", "Black/Clay", "Red", "Laterite", "Sandy", "Loamy"];
 const waterSources = ["Well", "Canal", "Borewell", "River", "Rainwater", "Mixed"];
 const cropStages = ["Seedling", "Growing", "Flowering", "Fruiting", "Mature", "Harvesting"];
-
-// Kerala districts for location selection
-const keralaDistricts = [
-  "Thiruvananthapuram",
-  "Kollam",
-  "Pathanamthitta",
-  "Alappuzha",
-  "Kottayam",
-  "Idukki",
-  "Ernakulam",
-  "Thrissur",
-  "Palakkad",
-  "Malappuram",
-  "Kozhikode",
-  "Wayanad",
-  "Kannur",
-  "Kasaragod"
-];
 
 export default function FarmProfile() {
   const { user } = useAuth();
@@ -58,9 +40,26 @@ export default function FarmProfile() {
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState<Partial<Farm>>({});
+  const [availableSoilTypes, setAvailableSoilTypes] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [showAddCrop, setShowAddCrop] = useState(false);
   const [newCrop, setNewCrop] = useState({ name: "", variety: "", area: "", stage: "", health: "good" });
+
+  // Handle district change and auto-fill soil type
+  const handleDistrictChange = (selectedDistrict: string) => {
+    setEditForm({ ...editForm, location: selectedDistrict });
+    if (selectedDistrict) {
+      const soilTypes = getSoilTypesForDistrict(selectedDistrict);
+      setAvailableSoilTypes(soilTypes);
+      // Auto-fill soil type only if not already set or different district
+      if (!editForm.soil_type || !soilTypes.includes(editForm.soil_type)) {
+        const primarySoil = getPrimarySoilType(selectedDistrict);
+        setEditForm(prev => ({ ...prev, location: selectedDistrict, soil_type: primarySoil }));
+      }
+    } else {
+      setAvailableSoilTypes([]);
+    }
+  };
 
   useEffect(() => {
     if (user) {
@@ -215,7 +214,13 @@ export default function FarmProfile() {
               </Button>
             </div>
           ) : (
-            <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+            <Button variant="outline" size="sm" onClick={() => {
+              setIsEditing(true);
+              // Initialize available soil types for current district
+              if (farm?.location) {
+                setAvailableSoilTypes(getSoilTypesForDistrict(farm.location));
+              }
+            }}>
               <Edit2 className="w-4 h-4 mr-2" />
               Edit
             </Button>
@@ -244,7 +249,7 @@ export default function FarmProfile() {
                   {isEditing ? (
                     <select
                       value={editForm.location || ""}
-                      onChange={(e) => setEditForm({ ...editForm, location: e.target.value })}
+                      onChange={(e) => handleDistrictChange(e.target.value)}
                       className="text-sm bg-primary-foreground/10 border border-primary-foreground/30 rounded-lg px-2 py-1 outline-none text-primary-foreground"
                     >
                       <option value="" className="text-foreground bg-background">Select District</option>
@@ -289,7 +294,7 @@ export default function FarmProfile() {
                       className="font-medium text-sm bg-transparent outline-none w-full"
                     >
                       <option value="">Select</option>
-                      {soilTypes.map((type) => (
+                      {(availableSoilTypes.length > 0 ? availableSoilTypes : getSoilTypesForDistrict(editForm.location || farm.location || "")).map((type) => (
                         <option key={type} value={type}>{type}</option>
                       ))}
                     </select>

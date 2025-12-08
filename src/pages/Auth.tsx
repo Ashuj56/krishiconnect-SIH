@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 import { Language, translations } from "@/contexts/LanguageContext";
+import { keralaDistricts, getSoilTypesForDistrict, getPrimarySoilType } from "@/data/keralaSoilMapping";
 
 const emailSchema = z.string().email("Please enter a valid email address");
 const passwordSchema = z.string().min(6, "Password must be at least 6 characters");
@@ -17,7 +18,6 @@ const phoneSchema = z.string().min(10, "Please enter a valid phone number");
 type AuthMode = "signin" | "signup";
 type SignupStep = 0 | 1 | 2; // 0 = language selection, 1 = personal, 2 = farm
 
-const soilTypes = ["Alluvial", "Black/Clay", "Red", "Laterite", "Sandy", "Loamy"];
 const waterSources = ["Well", "Canal", "Borewell", "River", "Rainwater", "Mixed"];
 
 const languageOptions: { code: Language; name: string; nativeName: string }[] = [
@@ -34,9 +34,11 @@ export default function Auth() {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
-  const [location, setLocation] = useState("");
+  const [district, setDistrict] = useState("");
+  const [village, setVillage] = useState("");
   const [landArea, setLandArea] = useState("");
   const [soilType, setSoilType] = useState("");
+  const [availableSoilTypes, setAvailableSoilTypes] = useState<string[]>([]);
   const [waterSource, setWaterSource] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -109,8 +111,8 @@ export default function Auth() {
   const validateStep2 = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!location.trim()) {
-      newErrors.location = "Please enter your location";
+    if (!district) {
+      newErrors.district = "Please select your district";
     }
 
     if (!landArea.trim() || isNaN(parseFloat(landArea))) {
@@ -123,6 +125,20 @@ export default function Auth() {
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  };
+
+  // Auto-fill soil type when district changes
+  const handleDistrictChange = (selectedDistrict: string) => {
+    setDistrict(selectedDistrict);
+    if (selectedDistrict) {
+      const soilTypes = getSoilTypesForDistrict(selectedDistrict);
+      setAvailableSoilTypes(soilTypes);
+      const primarySoil = getPrimarySoilType(selectedDistrict);
+      setSoilType(primarySoil);
+    } else {
+      setAvailableSoilTypes([]);
+      setSoilType("");
+    }
   };
 
   const validateSignIn = (): boolean => {
@@ -193,10 +209,15 @@ export default function Auth() {
       const { data: { user: newUser } } = await supabase.auth.getUser();
       
       if (newUser) {
+        // Format location as "Village, District, Kerala"
+        const formattedLocation = village.trim() 
+          ? `${village.trim()}, ${district}, Kerala` 
+          : `${district}, Kerala`;
+
         // Update profile with phone, location, and language
         await supabase.from("profiles").update({
           phone,
-          location,
+          location: formattedLocation,
           language: selectedLanguage,
         }).eq("id", newUser.id);
 
@@ -204,7 +225,7 @@ export default function Auth() {
         await supabase.from("farms").insert({
           user_id: newUser.id,
           name: `${fullName}'s Farm`,
-          location,
+          location: district, // Store district for easy lookup
           total_area: parseFloat(landArea),
           area_unit: "acres",
           soil_type: soilType,
@@ -552,23 +573,43 @@ export default function Auth() {
           {/* Sign Up Step 2 - Farm Details */}
           {mode === "signup" && signupStep === 2 && (
             <>
+              {/* District Selection */}
+              <div className="space-y-1.5">
+                <div className="relative">
+                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <select
+                    value={district}
+                    onChange={(e) => handleDistrictChange(e.target.value)}
+                    className={cn(
+                      "w-full h-14 pl-12 pr-4 rounded-xl bg-muted border-2 border-transparent focus:ring-0 focus:border-primary/50 outline-none appearance-none",
+                      errors.district && "border-destructive",
+                      !district && "text-muted-foreground"
+                    )}
+                  >
+                    <option value="">Select District</option>
+                    {keralaDistricts.map((d) => (
+                      <option key={d} value={d}>{d}</option>
+                    ))}
+                  </select>
+                </div>
+                {errors.district && <p className="text-xs text-destructive pl-1">{errors.district}</p>}
+              </div>
+
+              {/* Village/Town (Optional) */}
               <div className="space-y-1.5">
                 <div className="relative">
                   <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <input
                     type="text"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    placeholder={t("farmLocation")}
-                    className={cn(
-                      "w-full h-14 pl-12 pr-4 rounded-xl bg-muted border-2 border-transparent focus:ring-0 focus:border-primary/50 outline-none",
-                      errors.location && "border-destructive"
-                    )}
+                    value={village}
+                    onChange={(e) => setVillage(e.target.value)}
+                    placeholder="Village/Town (optional)"
+                    className="w-full h-14 pl-12 pr-4 rounded-xl bg-muted border-2 border-transparent focus:ring-0 focus:border-primary/50 outline-none"
                   />
                 </div>
-                {errors.location && <p className="text-xs text-destructive pl-1">{errors.location}</p>}
               </div>
 
+              {/* Land Area */}
               <div className="space-y-1.5">
                 <div className="relative">
                   <Leaf className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
@@ -586,6 +627,7 @@ export default function Auth() {
                 {errors.landArea && <p className="text-xs text-destructive pl-1">{errors.landArea}</p>}
               </div>
 
+              {/* Soil Type (Auto-filled based on district) */}
               <div className="space-y-1.5">
                 <div className="relative">
                   <Mountain className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
@@ -599,11 +641,17 @@ export default function Auth() {
                     )}
                   >
                     <option value="">{t("soilType")}</option>
-                    {soilTypes.map((type) => (
-                      <option key={type} value={type}>{type}</option>
-                    ))}
+                    {availableSoilTypes.length > 0 
+                      ? availableSoilTypes.map((type) => (
+                          <option key={type} value={type}>{type}</option>
+                        ))
+                      : <option value="" disabled>Select district first</option>
+                    }
                   </select>
                 </div>
+                {soilType && district && (
+                  <p className="text-xs text-muted-foreground pl-1">Auto-detected for {district}</p>
+                )}
                 {errors.soilType && <p className="text-xs text-destructive pl-1">{errors.soilType}</p>}
               </div>
 
