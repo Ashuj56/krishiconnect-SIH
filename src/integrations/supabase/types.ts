@@ -18,6 +18,8 @@ export type Database = {
         Row: {
           activity_date: string
           activity_type: string
+          area_covered: number | null
+          area_covered_unit: string | null
           cost: number | null
           created_at: string | null
           crop_id: string | null
@@ -32,6 +34,8 @@ export type Database = {
         Insert: {
           activity_date?: string
           activity_type: string
+          area_covered?: number | null
+          area_covered_unit?: string | null
           cost?: number | null
           created_at?: string | null
           crop_id?: string | null
@@ -46,6 +50,8 @@ export type Database = {
         Update: {
           activity_date?: string
           activity_type?: string
+          area_covered?: number | null
+          area_covered_unit?: string | null
           cost?: number | null
           created_at?: string | null
           crop_id?: string | null
