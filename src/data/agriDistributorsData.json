@@ -1,0 +1,1333 @@
+{
+  
+  "districts": [
+    {
+      "name": "Thiruvananthapuram",
+      "dealers": [
+        {
+          "sn": "1",
+          "unit_name": "Akshaya, Mariyapuram",
+          "owner_name": "Anil",
+          "is_household_dealer": "No",
+          "address": "Akshaya, Mariyapuram",
+          "phone": "9447451411",
+          "license_number": "FDL 21/2022 ADFW/PAO/TVM/1302/2022-TA(2)",
+          "validity": "1/4/2022 to 31/3/2027"
+        },
+        {
+          "sn": "2",
+          "unit_name": "MAHALEKHSMI FERTILISERS",
+          "owner_name": "B.S. Radhakrishnan Nair",
+          "is_household_dealer": "No",
+          "address": "Market Road, Kacheri Junction, Attingal",
+          "phone": "9447303814",
+          "license_number": "NO: FDL-33/2020 TA (2) 5994/2020",
+          "validity": "01-01-2019"
+        }
+      ]
+    },
+    {
+      "name": "Kollam",
+      "dealers": [
+        {
+          "sn": "1",
+          "unit_name": "Grama Karshaka Fertilizer Compay",
+          "owner_name": "G Vikraman Nair",
+          "is_household_dealer": "No",
+          "address": "The Gramakarshaka Fertilizer Company, Sasthamkotta",
+          "phone": "9400843310",
+          "license_number": "TA (2) 2354/2022 WHOLESALE PD 1/2019",
+          "validity": "05-11-2019"
+        },
+        {
+          "sn": "1",
+          "unit_name": "Agrichemic",
+          "owner_name": "P Sreekumar",
+          "is_household_dealer": "No",
+          "address": "Karumady, Ambalappuzha",
+          "phone": "9447174459",
+          "license_number": "PD 88/2005-06",
+          "validity": null
+        },
+        {
+          "sn": "2",
+          "unit_name": "Agrosales",
+          "owner_name": "PJ Scaria",
+          "is_household_dealer": "No",
+          "address": "Karumady, Ambalappuzha",
+          "phone": "7907174525",
+          "license_number": "PD 16/2017",
+          "validity": null
+        },
+        {
+          "sn": "3",
+          "unit_name": "Cropguard",
+          "owner_name": "Sandeep",
+          "is_household_dealer": "No",
+          "address": "Cropguard, Pathiyoor",
+          "phone": "9447104240",
+          "license_number": "PD 31/2017",
+          "validity": null
+        },
+        {
+          "sn": "4",
+          "unit_name": "Peedikayil Agric Agencies",
+          "owner_name": "Thomas Kurian",
+          "is_household_dealer": "No",
+          "address": "Peedikayil Agric Agencies, Edathua",
+          "phone": "9495330102",
+          "license_number": "PD 29/17",
+          "validity": null
+        },
+        {
+          "sn": "5",
+          "unit_name": "Mekkaattil",
+          "owner_name": "MP George",
+          "is_household_dealer": "No",
+          "address": "Nedumudy, Alappuzha",
+          "phone": "9447001885",
+          "license_number": "PD 3/2018",
+          "validity": null
+        }
+      ]
+    },
+    {
+      "name": "Alappuzha",
+      "dealers": [
+        {
+          "sn": "6",
+          "unit_name": "Southern Acids & Chemicals",
+          "owner_name": "Anzil H",
+          "is_household_dealer": "No",
+          "address": "Cheruveli Building, Ponnad P.O, Mannancherry",
+          "phone": "7902631980",
+          "license_number": "KL Agri IN-80",
+          "validity": "18.12.2021"
+        },
+        {
+          "sn": "7",
+          "unit_name": "Ambadi Naturals Complete Solution for Agriculture",
+          "owner_name": "Sijo K J",
+          "is_household_dealer": "No",
+          "address": "Amruthapuri Road, Vallikkavu",
+          "phone": "9496993576",
+          "license_number": "KLAGRI-IN-237/22",
+          "validity": "05.01.2023"
+        }
+      ]
+    },
+    {
+      "name": "Pathanamthitta",
+      "dealers": [
+        {
+          "sn": "1",
+          "unit_name": "JISS BIOGENICS, Kattappana",
+          "owner_name": "Pratikkumar Rajeshbhai Dilwadi",
+          "is_household_dealer": null,
+          "address": "JISS BIOGENICS, Kattappana",
+          "phone": null,
+          "license_number": "KLAGRI-IN-57/2023",
+          "validity": null
+        },
+        {
+          "sn": "2",
+          "unit_name": "GEOLIFE AGRITECH INDIA PVT LTD",
+          "owner_name": "S. Raj kumar",
+          "is_household_dealer": null,
+          "address": "GEOLIFE AGRITECH INDIA PVT LTD",
+          "phone": null,
+          "license_number": "KLAGRI-IN-82/2021",
+          "validity": "01.04.2022"
+        },
+        {
+          "sn": "3",
+          "unit_name": "GCA Chemicals",
+          "owner_name": "Sreejith K Unnithan",
+          "is_household_dealer": null,
+          "address": "Puliyanmala",
+          "phone": null,
+          "license_number": "KLAGRI-IN-77/2021",
+          "validity": "14.12.2021"
+        },
+        {
+          "sn": "4",
+          "unit_name": "Indo Bogher Plant Science (p) Ltd",
+          "owner_name": "Mr. Sudhakar P",
+          "is_household_dealer": null,
+          "address": "opp Panchayath office Vandanmedu",
+          "phone": null,
+          "license_number": "KLAGRI-IN-238/2022",
+          "validity": null
+        },
+        {
+          "sn": "5",
+          "unit_name": "KR Life Science Pvt Ltd",
+          "owner_name": "Mr. Sougumar.C",
+          "is_household_dealer": null,
+          "address": "Chettukuzhi, Kochara P O",
+          "phone": null,
+          "license_number": "KLAGRI-IN-39/2023",
+          "validity": null
+        },
+        {
+          "sn": "6",
+          "unit_name": "Southern Crop Science Pvt Ltd",
+          "owner_name": "Mr. Sabu",
+          "is_household_dealer": null,
+          "address": "Vandanmedu",
+          "phone": "9447177825",
+          "license_number": "PD2/2017",
+          "validity": null
+        },
+        {
+          "sn": "7",
+          "unit_name": "Farmmate Agri Solution",
+          "owner_name": "Suresh Cherivan",
+          "is_household_dealer": null,
+          "address": "Anakkara",
+          "phone": "9447356006",
+          "license_number": "KLAGRI-IN-28/2022",
+          "validity": null
+        },
+        {
+          "sn": "8",
+          "unit_name": "Cardamom Point",
+          "owner_name": "Cinthu Abraham",
+          "is_household_dealer": null,
+          "address": "Cardamom Point",
+          "phone": "9447197799",
+          "license_number": "PD 32/2017",
+          "validity": null
+        },
+        {
+          "sn": "9",
+          "unit_name": "Sahyadri Agro Agencies",
+          "owner_name": "Thomas Francis",
+          "is_household_dealer": null,
+          "address": "Chakkupallam",
+          "phone": "9447236768",
+          "license_number": "PD 5/2014",
+          "validity": null
+        },
+        {
+          "sn": "10",
+          "unit_name": "JU Agri Science Pvt Ltd",
+          "owner_name": "Paranthaman Mohanraj",
+          "is_household_dealer": null,
+          "address": "JU Agri Science Pvt Ltd",
+          "phone": "6238552023",
+          "license_number": "KLAGRI-IN-90/2023",
+          "validity": null
+        },
+        {
+          "sn": "11",
+          "unit_name": "Best Agro Life Ltd",
+          "owner_name": "Sethuraman G",
+          "is_household_dealer": null,
+          "address": "Best Agro Life Ltd",
+          "phone": "7094834364",
+          "license_number": "KLAGRI-IN-74/2023",
+          "validity": null
+        },
+        {
+          "sn": "12",
+          "unit_name": "Abdul Gafoor Horti Research Centre",
+          "owner_name": "Abdul Gafoor",
+          "is_household_dealer": null,
+          "address": "Abdul Gafoor Horti Research Centre",
+          "phone": null,
+          "license_number": null,
+          "validity": null
+        },
+        {
+          "sn": "13",
+          "unit_name": "Shefa Agri Care Technologies",
+          "owner_name": "N. Thirumavalavan",
+          "is_household_dealer": null,
+          "address": "Shefa Agri Care Technologies",
+          "phone": null,
+          "license_number": null,
+          "validity": null
+        },
+        {
+          "sn": "14",
+          "unit_name": "Insecticides India Ltd.",
+          "owner_name": "S. Kuppuswamy",
+          "is_household_dealer": null,
+          "address": "Insecticides India Ltd.",
+          "phone": null,
+          "license_number": null,
+          "validity": null
+        }
+      ]
+    },
+    {
+      "name": "Idukki",
+      "dealers": [
+        {
+          "sn": "15",
+          "unit_name": "CPMCS Ltd.",
+          "owner_name": "Chief Executive Officer",
+          "is_household_dealer": null,
+          "address": "CPMCS Ltd.",
+          "phone": null,
+          "license_number": null,
+          "validity": null
+        },
+        {
+          "sn": "16",
+          "unit_name": "KCPMC, Vandanmedu",
+          "owner_name": "Boban P. Mani",
+          "is_household_dealer": null,
+          "address": "Manager Accounts KCPMC, Vandanmedu",
+          "phone": null,
+          "license_number": null,
+          "validity": null
+        },
+        {
+          "sn": "17",
+          "unit_name": "Cardamom Point",
+          "owner_name": "Cindhu Abraham",
+          "is_household_dealer": null,
+          "address": "Cardamom Point",
+          "phone": null,
+          "license_number": null,
+          "validity": null
+        },
+        {
+          "sn": "18",
+          "unit_name": "Ayva Agro Trading Com. Pvt. Ltd.",
+          "owner_name": "Managing Director",
+          "is_household_dealer": null,
+          "address": "Ayva Agro Trading Com. Pvt. Ltd.",
+          "phone": null,
+          "license_number": null,
+          "validity": null
+        },
+        {
+          "sn": "19",
+          "unit_name": "Crop max Agri Clinic",
+          "owner_name": "Bijumom K. D",
+          "is_household_dealer": null,
+          "address": "Crop max Agri Clinic",
+          "phone": null,
+          "license_number": null,
+          "validity": null
+        },
+        {
+          "sn": "20",
+          "unit_name": "Oasis Agro Industries",
+          "owner_name": "Rejit George",
+          "is_household_dealer": null,
+          "address": "Oasis Agro Industries",
+          "phone": null,
+          "license_number": null,
+          "validity": null
+        },
+        {
+          "sn": "21",
+          "unit_name": "Sun Rasiya Organic",
+          "owner_name": "Vivek Suresh Munchawadakar",
+          "is_household_dealer": null,
+          "address": "Sun Rasiya Organic",
+          "phone": null,
+          "license_number": null,
+          "validity": null
+        },
+        {
+          "sn": "22",
+          "unit_name": "Planprot Remedies",
+          "owner_name": "M.K. Joseph",
+          "is_household_dealer": null,
+          "address": "Planprot Remedies",
+          "phone": null,
+          "license_number": null,
+          "validity": null
+        },
+        {
+          "sn": "23",
+          "unit_name": "Sahyadri Agro Agency",
+          "owner_name": "Thomas Francis",
+          "is_household_dealer": null,
+          "address": "Sahyadri Agro Agency",
+          "phone": null,
+          "license_number": null,
+          "validity": null
+        },
+        {
+          "sn": "24",
+          "unit_name": "Biostadt India Ltd",
+          "owner_name": "Vijay Reghunathan",
+          "is_household_dealer": null,
+          "address": "Kochera",
+          "phone": "9645109310",
+          "license_number": "PD 18/2019",
+          "validity": null
+        },
+        {
+          "sn": "25",
+          "unit_name": "Ingene Organics Pvt. Ltd",
+          "owner_name": "K Sankaranarayanan",
+          "is_household_dealer": null,
+          "address": "Ingene Organics Pvt. Ltd",
+          "phone": null,
+          "license_number": "KLAGRI-IN-163/22",
+          "validity": "19.09.22"
+        },
+        {
+          "sn": "26",
+          "unit_name": "Aksa Agro Chemicals",
+          "owner_name": null,
+          "is_household_dealer": null,
+          "address": "Combayar P O, Nedumkandom",
+          "phone": null,
+          "license_number": "PD 9/21",
+          "validity": null
+        },
+        {
+          "sn": "27",
+          "unit_name": "Mahindra Summit",
+          "owner_name": "Adrin Alex",
+          "is_household_dealer": null,
+          "address": "Mahindra Summit",
+          "phone": null,
+          "license_number": null,
+          "validity": null
+        },
+        {
+          "sn": "28",
+          "unit_name": "Agropark Insecticide State Licence",
+          "owner_name": "Siibichan Jacob",
+          "is_household_dealer": null,
+          "address": "Agropark Insecticide State Licence",
+          "phone": "9947880887",
+          "license_number": "KLAGRI-IN-67/2002",
+          "validity": null
+        },
+        {
+          "sn": "29",
+          "unit_name": "Rubber Point Thodupuzha",
+          "owner_name": "Shaji Joseph",
+          "is_household_dealer": null,
+          "address": "Rubber Point Thodupuzha",
+          "phone": null,
+          "license_number": "PD-33/2017",
+          "validity": null
+        },
+        {
+          "sn": "30",
+          "unit_name": "NICHINO INDIA PRIVATE LIMITED",
+          "owner_name": null,
+          "is_household_dealer": null,
+          "address": null,
+          "phone": null,
+          "license_number": null,
+          "validity": null
+        },
+        {
+          "sn": "31",
+          "unit_name": "Green Kart Agro Solutions",
+          "owner_name": "JOHNSON JOSEPH",
+          "is_household_dealer": null,
+          "address": null,
+          "phone": null,
+          "license_number": null,
+          "validity": null
+        },
+        {
+          "sn": "32",
+          "unit_name": "White Field International",
+          "owner_name": "Mr. Sunny Joseph",
+          "is_household_dealer": null,
+          "address": "Building No.8/24, White Field International, Kailasanadu P.O",
+          "phone": null,
+          "license_number": null,
+          "validity": null
+        }
+      ]
+    },
+    {
+      "name": "Kottayam",
+      "dealers": [
+        {
+          "sn": "1",
+          "unit_name": "Oppoottil Agencies",
+          "owner_name": "Kurian Issac",
+          "is_household_dealer": "No",
+          "address": "Kalarikkal Bazar Bldg.No.12, /30, PB No. 174, Kottayam-686001",
+          "phone": "9847056647",
+          "license_number": "PD-105/2006-7",
+          "validity": "PERMANENT"
+        },
+        {
+          "sn": "2",
+          "unit_name": "Kalarickal Agencies",
+          "owner_name": "George Kurian",
+          "is_household_dealer": "No",
+          "address": "Kalarickal bazar, Kottayam",
+          "phone": "9947446434",
+          "license_number": "PD-3/2019",
+          "validity": "PERMANENT"
+        },
+        {
+          "sn": "3",
+          "unit_name": "Ooppoottil agricultural services",
+          "owner_name": "Reji Kurian",
+          "is_household_dealer": "No",
+          "address": "Ooppoottil agricultural services",
+          "phone": "9495287582",
+          "license_number": "PD-22/2017-18",
+          "validity": "PERMANENT"
+        },
+        {
+          "sn": "4",
+          "unit_name": "Global agencies",
+          "owner_name": "Johny K M",
+          "is_household_dealer": "No",
+          "address": "Vempally P O, Kuravilangad",
+          "phone": null,
+          "license_number": "PD 11/2017",
+          "validity": "PERMANENT"
+        },
+        {
+          "sn": "5",
+          "unit_name": "Gharda Chemicals",
+          "owner_name": "George K Samuel",
+          "is_household_dealer": "No",
+          "address": "bldg.no. 8/615e near Essar, Crepe Mill Nattakom",
+          "phone": "9342907587",
+          "license_number": "PD5/2018",
+          "validity": "PERMANENT"
+        },
+        {
+          "sn": "6",
+          "unit_name": "FMC India Private Limited",
+          "owner_name": "George Kurian",
+          "is_household_dealer": "No",
+          "address": "8/615 BC PAKKIL PALLOM",
+          "phone": "9961600960",
+          "license_number": "PD4/2018",
+          "validity": "PERMANENT"
+        },
+        {
+          "sn": "7",
+          "unit_name": "Jeevagro Agro chemicals Pvt Limited",
+          "owner_name": "Prem Kumar",
+          "is_household_dealer": "No",
+          "address": "Building No. XX111/617 Kalarickkal Bazar P.B.No.174 Kottayam",
+          "phone": "9847077757",
+          "license_number": "PD 106/2006-07",
+          "validity": "PERMANENT"
+        },
+        {
+          "sn": "8",
+          "unit_name": "Thadickal trading Company",
+          "owner_name": "Charles Jose",
+          "is_household_dealer": "No",
+          "address": "Aruvithura PO, Erattupetta",
+          "phone": "9447045631",
+          "license_number": "PD-1/2018",
+          "validity": "PERMANENT"
+        },
+        {
+          "sn": "9",
+          "unit_name": "T STANES AND COMPANY LTD",
+          "owner_name": "PJ Sajan Joseph",
+          "is_household_dealer": "No",
+          "address": null,
+          "phone": "9497665906",
+          "license_number": null,
+          "validity": "PERMANANT"
+        },
+        {
+          "sn": "10",
+          "unit_name": "ADAMA India Pvt.Ltd",
+          "owner_name": null,
+          "is_household_dealer": "No",
+          "address": "Vedagiri Road",
+          "phone": null,
+          "license_number": null,
+          "validity": null
+        },
+        {
+          "sn": "11",
+          "unit_name": "Swal Corporation Ltd",
+          "owner_name": null,
+          "is_household_dealer": "No",
+          "address": "Gallant Building, Pariyaram P.O., Kottayam",
+          "phone": "9447796604",
+          "license_number": null,
+          "validity": null
+        },
+        {
+          "sn": "12",
+          "unit_name": "MARGO BIOCONTROLS PVT LTD",
+          "owner_name": null,
+          "is_household_dealer": "No",
+          "address": "Bul.No. XII/82(2B), Manippuzha Guest Road, Nattakom-686013",
+          "phone": "9446610532",
+          "license_number": null,
+          "validity": null
+        },
+        {
+          "sn": "13",
+          "unit_name": "Bayer Crop Science Limited",
+          "owner_name": null,
+          "is_household_dealer": "No",
+          "address": "Vazhakkala Commercial Centre, Kodimatha, Kottayam",
+          "phone": "7736366469",
+          "license_number": null,
+          "validity": null
+        },
+        {
+          "sn": "14",
+          "unit_name": "Excel Crop Care Limited",
+          "owner_name": null,
+          "is_household_dealer": "No",
+          "address": "Building No.XX111/617 Kalarickkal Bazar P.B.No.174 Kottayam",
+          "phone": "9847341140",
+          "license_number": null,
+          "validity": null
+        },
+        {
+          "sn": "15",
+          "unit_name": "Isagro(Asia) Agro chemicals Pvt Limited",
+          "owner_name": null,
+          "is_household_dealer": "No",
+          "address": "Building No.XX111/617 Kalarickkal Bazar P.B.No. 174",
+          "phone": "4812560042",
+          "license_number": null,
+          "validity": null
+        },
+        {
+          "sn": "16",
+          "unit_name": "SUMITOMO",
+          "owner_name": null,
+          "is_household_dealer": "No",
+          "address": null,
+          "phone": "9447127731",
+          "license_number": null,
+          "validity": null
+        },
+        {
+          "sn": "17",
+          "unit_name": "Silverline",
+          "owner_name": null,
+          "is_household_dealer": "No",
+          "address": null,
+          "phone": null,
+          "license_number": null,
+          "validity": null
+        },
+        {
+          "sn": "18",
+          "unit_name": "FMC India Private Limited",
+          "owner_name": null,
+          "is_household_dealer": "No",
+          "address": null,
+          "phone": null,
+          "license_number": null,
+          "validity": null
+        }
+      ]
+    },
+    {
+      "name": "Ernakulam",
+      "dealers": [
+        {
+          "sn": "1",
+          "unit_name": "UPL Sustainable Agri solutions Ltd",
+          "owner_name": "Berlin Thomas",
+          "is_household_dealer": null,
+          "address": "Aluva",
+          "phone": null,
+          "license_number": "KLAGRI-IN-61/2021",
+          "validity": "22.11.2021"
+        },
+        {
+          "sn": "2",
+          "unit_name": "HIL India",
+          "owner_name": "Director HIL India",
+          "is_household_dealer": "No",
+          "address": "Udyogamandal po Ernakulam",
+          "phone": "9961633492",
+          "license_number": "PRM-35/2004",
+          "validity": "25/04/2022"
+        },
+        {
+          "sn": "3",
+          "unit_name": "Biotic Life Science (India) Pvt Ltd",
+          "owner_name": "IM Surendra Martin",
+          "is_household_dealer": "No",
+          "address": "IX/169, Ebenezer Complex - Veliyanad",
+          "phone": "8547538488",
+          "license_number": "KLAGRI-IN-75/2022",
+          "validity": "25/04/2022"
+        },
+        {
+          "sn": "4",
+          "unit_name": "Kalathil Agencies",
+          "owner_name": "Pradeep M.G",
+          "is_household_dealer": "Yes",
+          "address": "5/60 Athani Gandhimandhiram Road",
+          "phone": "9846355455",
+          "license_number": "KLAGRI-IN-108/2021",
+          "validity": "20/6/2022"
+        },
+        {
+          "sn": "5",
+          "unit_name": "Jyothy Labs Itd",
+          "owner_name": "R Suresh Kumar",
+          "is_household_dealer": "Yes",
+          "address": "D NO.13/314-317, THIRUTHISSERY, NEDUMBASSERY",
+          "phone": "8111959039",
+          "license_number": "KLAGRI-IN-56/2022",
+          "validity": "01.04.2022"
+        },
+        {
+          "sn": "6",
+          "unit_name": "Farmate",
+          "owner_name": "Agil Jose",
+          "is_household_dealer": "No",
+          "address": "Kangarappady, Vadacode",
+          "phone": "9447086689",
+          "license_number": "PD 10/2019",
+          "validity": "Permanent"
+        },
+        {
+          "sn": "7",
+          "unit_name": "Tropical agro System",
+          "owner_name": "Vinod Kumar (RM)",
+          "is_household_dealer": "No",
+          "address": "Epj Building, 2nd floor, Thammanam, Pulleppady Road, Ernakulam-682017",
+          "phone": "9947468886",
+          "license_number": "PRD81/2005-06",
+          "validity": "Permanent"
+        },
+        {
+          "sn": "8",
+          "unit_name": "Rallis india Ltd",
+          "owner_name": "Arun.G",
+          "is_household_dealer": "No",
+          "address": "Matsyapuri P.O, Willingdon Island, Cochin - 682029",
+          "phone": "9605890385",
+          "license_number": "PRD41/2004-05",
+          "validity": "Permanent"
+        },
+        {
+          "sn": "9",
+          "unit_name": "Central warehousing corporation",
+          "owner_name": "K.R Job",
+          "is_household_dealer": "No",
+          "address": "Central warehouse, Gandhi nagar, Kadavanthra",
+          "phone": "8848149505",
+          "license_number": "PD7/2020",
+          "validity": "Permanent"
+        },
+        {
+          "sn": "10",
+          "unit_name": "Csons Trading company",
+          "owner_name": "Vijesh Cherian",
+          "is_household_dealer": "Yes",
+          "address": "Vaduthala Ernakulam",
+          "phone": "9961546972",
+          "license_number": "PD5/20-21",
+          "validity": "Permanent"
+        },
+        {
+          "sn": "11",
+          "unit_name": "Beeta Traders and Agencies Pvt Ltd",
+          "owner_name": "Binu M. OOmmen",
+          "is_household_dealer": "Yes",
+          "address": "Palarivattom Kochin",
+          "phone": "9847036169",
+          "license_number": "KLAGRI-IN-162/2026",
+          "validity": "15.09.2022"
+        },
+        {
+          "sn": "12",
+          "unit_name": "Arunco Insecticide",
+          "owner_name": "Gowri Rao",
+          "is_household_dealer": "No",
+          "address": "48/48 magheeramJanamabhumi lane Perandoor Road",
+          "phone": "9539196755",
+          "license_number": "KLAGRI-IN-169/2027",
+          "validity": "29-09-2022"
+        },
+        {
+          "sn": "13",
+          "unit_name": "Madras Fertilizes Ltd",
+          "owner_name": "V.V Muhammed",
+          "is_household_dealer": "No",
+          "address": "A6 Bhasker Apartments narayanan asan rd Ponnurunnu 682019 vyttila",
+          "phone": "9847081708",
+          "license_number": "PD21/2018",
+          "validity": "29/11/2018"
+        },
+        {
+          "sn": "14",
+          "unit_name": "Indus Valley Fertilizers Pvt Ltd",
+          "owner_name": null,
+          "is_household_dealer": "No",
+          "address": "Mill House Buiding, Perumbavoor",
+          "phone": "9447128884",
+          "license_number": "PD3/2020",
+          "validity": "20.02.2023"
+        },
+        {
+          "sn": "15",
+          "unit_name": "Hameed and Company",
+          "owner_name": "V A Habeebur Rahman",
+          "is_household_dealer": "No",
+          "address": "A.M Road, Perumbavoor",
+          "phone": "9447033815",
+          "license_number": "PD3/2017",
+          "validity": "09.02.2017"
+        },
+        {
+          "sn": "16",
+          "unit_name": "Melappilly Stores",
+          "owner_name": "Jini Jose",
+          "is_household_dealer": "No",
+          "address": "Edakkunnu, Karukutty P.O",
+          "phone": "9633590242",
+          "license_number": "KLAGRI-IN-192/2028",
+          "validity": "31.10.2022"
+        },
+        {
+          "sn": "17",
+          "unit_name": "Keedanasini and Allied Trading Company",
+          "owner_name": "Sanjit James",
+          "is_household_dealer": "No",
+          "address": "Kerala Kottakkal Building Marottichodu Kalady",
+          "phone": "7025262564",
+          "license_number": "KLAGRI-IN-3/2023",
+          "validity": "13.01.2023"
+        },
+        {
+          "sn": "18",
+          "unit_name": "UPL. Sustainable Agri Solutions Ltd.",
+          "owner_name": "Berlin Thomas",
+          "is_household_dealer": "No",
+          "address": "XXIII/459-C, Vengola P.O Allapra, Ernakulam Dist.",
+          "phone": "9895050404",
+          "license_number": "KLAGRI-IN-61/2021",
+          "validity": "22-11-21"
+        },
+        {
+          "sn": "19",
+          "unit_name": "UPL LTD.",
+          "owner_name": "A L Rajasekar",
+          "is_household_dealer": "No",
+          "address": "Chundamala, Ponjassery lane Allapra P.O, Ernakulam Dist.",
+          "phone": "9447784812",
+          "license_number": "PD 03/2020",
+          "validity": "01-10-19"
+        },
+        {
+          "sn": "20",
+          "unit_name": "CSR Agro Industries",
+          "owner_name": "CS Radhakrishnan",
+          "is_household_dealer": "No",
+          "address": "Mudickal P O Perumbavoor",
+          "phone": "9447816001",
+          "license_number": "PD 23/2017",
+          "validity": "31.08.2017"
+        },
+        {
+          "sn": "21",
+          "unit_name": "Agri Centre",
+          "owner_name": "Vigil Joseph",
+          "is_household_dealer": "No",
+          "address": "Menachery Building Pattimattom",
+          "phone": "9446933999",
+          "license_number": "KLAGRI-IN-223/2029",
+          "validity": "16.12.2022"
+        },
+        {
+          "sn": "22",
+          "unit_name": "K.J. Joseph & Company",
+          "owner_name": "Shaji J",
+          "is_household_dealer": "No",
+          "address": "Kannikkatt Bldg, Kavumkara, Muvattupuzha",
+          "phone": "9495093510",
+          "license_number": "PRD 41(A)/2004/05",
+          "validity": "15/03/2023"
+        },
+        {
+          "sn": "23",
+          "unit_name": "Eco Agri Inputs",
+          "owner_name": "Anil Jose",
+          "is_household_dealer": "No",
+          "address": "Malayankeezhu, Kothamangalam",
+          "phone": "7593001121",
+          "license_number": "KLAGRI-IN-161/22",
+          "validity": "20/09/2022"
+        },
+        {
+          "sn": "24",
+          "unit_name": "HARITHA AGRO AGENCIES",
+          "owner_name": "SUNU SKARIA",
+          "is_household_dealer": "No",
+          "address": "NAREKKATUBUILDING PALACHUVADU, Piravom",
+          "phone": "9446717012",
+          "license_number": "KLAGRI-IN-66/23",
+          "validity": "06-06-2023"
+        },
+        {
+          "sn": "25",
+          "unit_name": "Corteva Agriscience",
+          "owner_name": "RAJA CHANDRAN",
+          "is_household_dealer": "No",
+          "address": "Ebenezor Complex-Bldng No.9/169. Arakkunnam",
+          "phone": "9562020277",
+          "license_number": "KLAGRI-IN-102/2023",
+          "validity": "11-08-2023"
+        },
+        {
+          "sn": "26",
+          "unit_name": "ATHANICKAL AGRO AGENCIES",
+          "owner_name": "Shiju George",
+          "is_household_dealer": "No",
+          "address": "ATHANICKAL (H) KARIKODE MULAMTHURUTHY PO",
+          "phone": "9745008488",
+          "license_number": "PD7/2017",
+          "validity": "05.02.2021"
+        },
+        {
+          "sn": "27",
+          "unit_name": "PCI Pest control Pvt.Ltd.",
+          "owner_name": "Rajeevkumar",
+          "is_household_dealer": "No",
+          "address": "Building No.52/591, Janatha Road, Vyttila",
+          "phone": "9447052585",
+          "license_number": "PD8/2020",
+          "validity": null
+        },
+        {
+          "sn": "28",
+          "unit_name": "Asiatic pest Control services pvt Ltd",
+          "owner_name": "Anjana S sankar",
+          "is_household_dealer": "No",
+          "address": "vinayaka M.G Road Kochi",
+          "phone": null,
+          "license_number": "PD 3/2021",
+          "validity": null
+        },
+        {
+          "sn": "29",
+          "unit_name": "M/s.Southern Trades & PCs",
+          "owner_name": "Sanjeev M.B",
+          "is_household_dealer": "No",
+          "address": "MBS Square Thykkoodam Vyttila",
+          "phone": "9447023062",
+          "license_number": "PD14/2019",
+          "validity": "24.09.2021"
+        },
+        {
+          "sn": "30",
+          "unit_name": "Crystal crop Protection ltd",
+          "owner_name": null,
+          "is_household_dealer": "No",
+          "address": "Buildng No.IX/169 B ebenezer Complex Veliyanad PO Ernakulam",
+          "phone": null,
+          "license_number": "PD13/2019",
+          "validity": "13.08.2019"
+        },
+        {
+          "sn": "31",
+          "unit_name": "Godrej Consumer Products",
+          "owner_name": null,
+          "is_household_dealer": "Yes",
+          "address": "Nochima, NAD, Aluva",
+          "phone": null,
+          "license_number": "PD 17/2023",
+          "validity": null
+        },
+        {
+          "sn": "32",
+          "unit_name": "Reckitt Benckiser Pvt Ltd",
+          "owner_name": "Binu Antony",
+          "is_household_dealer": "Yes",
+          "address": "Bldng No. VII/265,269 A Malikampeedika, Alangad P.O",
+          "phone": "8129100967",
+          "license_number": "PD14/2018",
+          "validity": "18/11/2019"
+        },
+        {
+          "sn": "33",
+          "unit_name": "Indochem Industries",
+          "owner_name": "P.R Unnikrishnan",
+          "is_household_dealer": "No",
+          "address": "Madvana LPS Rd, Near Fisheries College, Nettoor, Ekm 682040",
+          "phone": "0484-2376311",
+          "license_number": "PD13/2017",
+          "validity": "11.03.1019"
+        }
+      ]
+    },
+    {
+      "name": "Thrissur",
+      "dealers": [
+        {
+          "sn": "1",
+          "unit_name": "Southern Agro Industries",
+          "owner_name": "Sri. Achuthandamenon",
+          "is_household_dealer": "No",
+          "address": "Building No:XX/275(2) of Near KKIM College, Pullut PO Kodungallur",
+          "phone": "9946351240",
+          "license_number": "PD 12/2016",
+          "validity": "11-03-2019"
+        },
+        {
+          "sn": "2",
+          "unit_name": "Indo Danish Agro Inputs",
+          "owner_name": "Anila Thankachan",
+          "is_household_dealer": "No",
+          "address": "Kattilapoovam PO, Thrissur",
+          "phone": "9447530541, 9526295385",
+          "license_number": "PRD 17/2017",
+          "validity": "12-10-2018"
+        },
+        {
+          "sn": "3",
+          "unit_name": "Kakkassery Stores",
+          "owner_name": "Peter K Vargheese",
+          "is_household_dealer": "No",
+          "address": "Building No KMC 1/733, Biju road, Kunnakulam, Rice Market, Thrissur District-680503",
+          "phone": "9447829544",
+          "license_number": "PD 7/2019",
+          "validity": "11-08-2020"
+        },
+        {
+          "sn": "4",
+          "unit_name": "Agro Solutions",
+          "owner_name": "Ajeesh C S",
+          "is_household_dealer": "No",
+          "address": "Door No :2/385, A, B, Sree Krishna Shoping Complex, Edakkalathur PO, Thrissur, Pin-680510",
+          "phone": "9746723735",
+          "license_number": "PD 16/2018",
+          "validity": "01-04-2022"
+        },
+        {
+          "sn": "5",
+          "unit_name": "Agri Chemicals",
+          "owner_name": "Jessy Pavu",
+          "is_household_dealer": "No",
+          "address": "Door NO 35/1199 Ernjeri Angadi Thrissur",
+          "phone": "9446422184",
+          "license_number": "PD 05/2017",
+          "validity": "08-03-2019"
+        },
+        {
+          "sn": "6",
+          "unit_name": "KL David & John",
+          "owner_name": "Bastian John",
+          "is_household_dealer": "No",
+          "address": "Buiding No: 38/2396, Opp Sainik Centre, Arnattukara Road, Poothole Thrissur",
+          "phone": "0487 2384831, 2387212",
+          "license_number": "PD 8/2016",
+          "validity": "26-02-2019"
+        },
+        {
+          "sn": "7",
+          "unit_name": "Mekkattil Agencies",
+          "owner_name": "MP George",
+          "is_household_dealer": "No",
+          "address": "Vazhukkumpara, Chuvannamannu, Thrissur-680652",
+          "phone": "9447052585",
+          "license_number": "PD 108/2006-07",
+          "validity": "25-09-2019"
+        },
+        {
+          "sn": "8",
+          "unit_name": "Mekkattil Trading Company",
+          "owner_name": "Jain George",
+          "is_household_dealer": "No",
+          "address": "Vazhukkumpara, Chuvannamannu, Thrissur-680653",
+          "phone": "9447001885",
+          "license_number": "PD6/2016",
+          "validity": "25-09-2019"
+        }
+      ]
+    },
+    {
+      "name": "Malappuram",
+      "dealers": [
+        {
+          "sn": "1",
+          "unit_name": "SOMAS, Perinthalmanna",
+          "owner_name": "P.K. Kuruvilla",
+          "is_household_dealer": "No",
+          "address": "SOMAS, Puthur Street, Pattambi Road, Perinthalmanna",
+          "phone": "9037488747",
+          "license_number": "PD 6/2018",
+          "validity": "25.06.2019"
+        },
+        {
+          "sn": "2",
+          "unit_name": "Farm Panacea Trade Links",
+          "owner_name": "Mohammed Shiyas.C.K",
+          "is_household_dealer": "No",
+          "address": "Edathara, Thootha P.O. Perinthalmanna",
+          "phone": "9544700923",
+          "license_number": "PD 9/2017",
+          "validity": "22.04.2021"
+        },
+        {
+          "sn": "3",
+          "unit_name": "PLANT LABZ TECH LLP",
+          "owner_name": "Shamil Ameen.P",
+          "is_household_dealer": "No",
+          "address": "Parakkal (H), Chokkad P.O",
+          "phone": "9562267609",
+          "license_number": "KLAGRI-IN-239/2022",
+          "validity": "13.01.2023"
+        }
+      ]
+    },
+    {
+      "name": "Palakkad",
+      "dealers": [
+        {
+          "sn": "1",
+          "unit_name": "Cheerans Distributing Company",
+          "owner_name": "James CV",
+          "is_household_dealer": "Yes",
+          "address": "old:26/233(1), New No.40/936 Jai hind street, BigBazar Palakkad-678014",
+          "phone": "9447289361",
+          "license_number": "KL Agri-IN-140/2022",
+          "validity": "6-8-2022"
+        },
+        {
+          "sn": "2",
+          "unit_name": "Vijaya Agencies",
+          "owner_name": "Krishnanunni Pirarath",
+          "is_household_dealer": "Yes",
+          "address": "Karuna Ambikapuram Post Palakkad-678011",
+          "phone": "9846050004",
+          "license_number": "KL Agri-IN-130/2022",
+          "validity": "21-07-22"
+        },
+        {
+          "sn": "3",
+          "unit_name": "Premsons marketing",
+          "owner_name": "Prem Chandran",
+          "is_household_dealer": "Yes",
+          "address": "22/366(6), Leela Arcade, Matha Kovil Street Palakkad -678001",
+          "phone": "8590539797",
+          "license_number": "KL Agri-IN-131/2022",
+          "validity": "21-07-22"
+        },
+        {
+          "sn": "4",
+          "unit_name": "Palakkad Medi sales",
+          "owner_name": "Devaki P.N",
+          "is_household_dealer": "Yes",
+          "address": "41/379-Palakkad medi sales Kandath complex court road, palakkad",
+          "phone": "9567695581",
+          "license_number": "KL. Agri-IN-160/2022",
+          "validity": "14-09-22"
+        },
+        {
+          "sn": "5",
+          "unit_name": "Dabur India Limited",
+          "owner_name": "VIJAY BABU",
+          "is_household_dealer": "Yes",
+          "address": "10/725-Ground floor, SHK Complex Marutharoad, Palakkad 678007",
+          "phone": "9994111112",
+          "license_number": "KL. Agri - IN-107/2023",
+          "validity": "26-08-23"
+        },
+        {
+          "sn": "6",
+          "unit_name": "M/s Godrej Agrovit Limited",
+          "owner_name": "V Jaya Radhakrishnan",
+          "is_household_dealer": "No",
+          "address": "M/s Godrej Agrovit Limited",
+          "phone": "9946105321",
+          "license_number": "PD 115/2006-07",
+          "validity": "27.1.18"
+        },
+        {
+          "sn": "7",
+          "unit_name": "PK JOSEPH KISAN AGENCIES",
+          "owner_name": "PK JOSEPH",
+          "is_household_dealer": "No",
+          "address": "PK JOSEPH KISAN AGENCIES",
+          "phone": "9446150293",
+          "license_number": "PD 4/2021",
+          "validity": "20.1.21"
+        },
+        {
+          "sn": "8",
+          "unit_name": "HYGINE CROP SCIENCE",
+          "owner_name": "Thresyamma joseph",
+          "is_household_dealer": "No",
+          "address": "Thresyamma joseph Hygene crop science",
+          "phone": "9349547201",
+          "license_number": "PD 19/2017",
+          "validity": "16.8.19"
+        },
+        {
+          "sn": "9",
+          "unit_name": "SUMITOMO CHEMICALS",
+          "owner_name": "R.V MUTHAIH PILLAI",
+          "is_household_dealer": "No",
+          "address": "RV MUTHAYAPILLAI SUMITOMO",
+          "phone": "9994755400",
+          "license_number": "PD 15/2018",
+          "validity": "25.9.19"
+        },
+        {
+          "sn": "10",
+          "unit_name": "Agrozymme corporation",
+          "owner_name": "P.R Muralikumar",
+          "is_household_dealer": "No",
+          "address": "Agrozymme corporation",
+          "phone": "49222572225",
+          "license_number": "PD141/2009-10",
+          "validity": "7.1.2018"
+        },
+        {
+          "sn": "11",
+          "unit_name": "Ramcides Crop science PVT LTD",
+          "owner_name": "SABAREESH",
+          "is_household_dealer": "No",
+          "address": "Ramcides Crop science PVT LTD",
+          "phone": "9495247225",
+          "license_number": "CRD-91/2005-06",
+          "validity": "8.5.05"
+        },
+        {
+          "sn": "12",
+          "unit_name": "LINGA CHEMICALS",
+          "owner_name": "P.MAHALINGAM",
+          "is_household_dealer": "No",
+          "address": "Linga Chemicals",
+          "phone": "8891104271",
+          "license_number": "PD 04/2014",
+          "validity": "4.10.17"
+        },
+        {
+          "sn": "13",
+          "unit_name": "Jyothi labs",
+          "owner_name": "Krishnanunni Pirarath",
+          "is_household_dealer": "No",
+          "address": "Jyothy LabS Itd Kozhippara",
+          "phone": "9847036169",
+          "license_number": "PD 02/2018",
+          "validity": "17-02-2018"
+        },
+        {
+          "sn": "14",
+          "unit_name": "Agri biozone",
+          "owner_name": "SHIBU TL",
+          "is_household_dealer": "No",
+          "address": "Shibu TL Agri Biozone Thayyil Erattupetta",
+          "phone": "9446507791",
+          "license_number": "PD 9/2019",
+          "validity": "4.1 2019"
+        },
+        {
+          "sn": "15",
+          "unit_name": "Mitsouka chemicals",
+          "owner_name": "Manoj Kumar P",
+          "is_household_dealer": "No",
+          "address": "Mitsouka Chemicals pvt ltd Chandappura Kuzhalmannam",
+          "phone": "8139824674",
+          "license_number": "PD 25/2017",
+          "validity": "16.9.17"
+        },
+        {
+          "sn": "16",
+          "unit_name": "cropnosys india pvt ltd",
+          "owner_name": "M.SASIKUMAR",
+          "is_household_dealer": "No",
+          "address": "Door No 3/422. Kuzhalmannam Palakkad",
+          "phone": "9249712666",
+          "license_number": "PD 8/2019",
+          "validity": "1.6.19"
+        },
+        {
+          "sn": "17",
+          "unit_name": "Rijo P Jorge Agrihub",
+          "owner_name": "Rijo P Jorge",
+          "is_household_dealer": "No",
+          "address": "Nochur road Koduvayur",
+          "phone": "9447602585",
+          "license_number": "KL AGRI IN 68/22",
+          "validity": "18.4.22"
+        },
+        {
+          "sn": "18",
+          "unit_name": "Dabur India Limited",
+          "owner_name": "Vijay Babu",
+          "is_household_dealer": "No",
+          "address": "Door No. 10/725, Ground Floor Marutharoad B.O Palakkad",
+          "phone": "9994111112",
+          "license_number": "KLAGRI-IN-107/2023",
+          "validity": "26-08-2023"
+        }
+      ]
+    },
+    {
+      "name": "Kozhikkode",
+      "dealers": [
+        {
+          "sn": "1",
+          "unit_name": "PLANT LABZ TECH LLP",
+          "owner_name": null,
+          "is_household_dealer": "No",
+          "address": "12/243, Karuthaparamba, opposite mukkam road, karassery",
+          "phone": "9747116691",
+          "license_number": "KL AGRI-IN-57/2022",
+          "validity": null
+        },
+        {
+          "sn": "2",
+          "unit_name": "Kisan Excel Pvt Ltd",
+          "owner_name": "Junaid",
+          "is_household_dealer": "Both",
+          "address": "Kozhikode",
+          "phone": "8714232343",
+          "license_number": null,
+          "validity": null
+        }
+      ]
+    },
+    {
+      "name": "Kannur",
+      "dealers": [
+        {
+          "sn": "1",
+          "unit_name": "Northern Antipest",
+          "owner_name": "SAJI ZACHERIAS",
+          "is_household_dealer": "No",
+          "address": "NORTHERN ANTIPEST, ASHANAGAR, KARUVANCHAL (PO)",
+          "phone": "9447086239",
+          "license_number": "PD-20/2017",
+          "validity": "PERMANENT"
+        },
+        {
+          "sn": "2",
+          "unit_name": "PRIYA FERTILIZER & AGENCY",
+          "owner_name": "SAJIT J",
+          "is_household_dealer": "No",
+          "address": "PERUMPADAVU KARIPPAL P.O 670581",
+          "phone": "9446481108",
+          "license_number": "1/1/2020",
+          "validity": "09/11/2024"
+        }
+      ]
+    },
+    {
+      "name": "Wayanad",
+      "dealers": []
+    },
+    {
+      "name": "Kasargod",
+      "dealers": []
+    }
+  ]
+}
