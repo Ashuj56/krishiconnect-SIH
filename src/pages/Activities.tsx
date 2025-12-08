@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
-import { Plus, ChevronLeft, ChevronRight, Droplets, Leaf, Bug, Scissors, Sun, Loader2, X } from "lucide-react";
+import { Plus, ChevronLeft, ChevronRight, Droplets, Leaf, Bug, Scissors, Sun, Loader2, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -63,6 +64,9 @@ export default function Activities() {
   const [crops, setCrops] = useState<Crop[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
+  const [deletingActivityId, setDeletingActivityId] = useState<string | null>(null);
   const [selectedType, setSelectedType] = useState<ActivityType | null>(null);
   const [newActivity, setNewActivity] = useState({
     title: "",
@@ -121,39 +125,105 @@ export default function Activities() {
     }
 
     try {
-      const { data, error } = await supabase
-        .from("activities")
-        .insert({
-          user_id: user.id,
-          activity_type: selectedType,
-          title: newActivity.title,
-          description: newActivity.description || null,
-          crop_id: newActivity.crop_id || null,
-          activity_date: selectedDate.toISOString().split("T")[0],
-          quantity: newActivity.quantity ? parseFloat(newActivity.quantity) : null,
-          quantity_unit: newActivity.quantity_unit || null,
-          area_covered: newActivity.area_covered ? parseFloat(newActivity.area_covered) : null,
-          area_covered_unit: newActivity.area_covered_unit || "acres",
-        })
-        .select()
-        .single();
+      const activityData = {
+        user_id: user.id,
+        activity_type: selectedType,
+        title: newActivity.title,
+        description: newActivity.description || null,
+        crop_id: newActivity.crop_id || null,
+        activity_date: selectedDate.toISOString().split("T")[0],
+        quantity: newActivity.quantity ? parseFloat(newActivity.quantity) : null,
+        quantity_unit: newActivity.quantity_unit || null,
+        area_covered: newActivity.area_covered ? parseFloat(newActivity.area_covered) : null,
+        area_covered_unit: newActivity.area_covered_unit || "acres",
+      };
 
-      if (error) throw error;
+      if (editingActivity) {
+        const { data, error } = await supabase
+          .from("activities")
+          .update(activityData)
+          .eq("id", editingActivity.id)
+          .select()
+          .single();
 
-      setActivities([data, ...activities]);
-      setShowAddDialog(false);
-      setSelectedType(null);
-      setNewActivity({ title: "", description: "", crop_id: "", quantity: "", quantity_unit: "", area_covered: "", area_covered_unit: "acres" });
-      toast({ title: "Activity added successfully" });
+        if (error) throw error;
+
+        setActivities(activities.map(a => a.id === editingActivity.id ? data : a));
+        toast({ title: "Activity updated successfully" });
+      } else {
+        const { data, error } = await supabase
+          .from("activities")
+          .insert(activityData)
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        setActivities([data, ...activities]);
+        toast({ title: "Activity added successfully" });
+      }
+
+      closeDialog();
     } catch (error) {
-      toast({ title: "Error adding activity", variant: "destructive" });
+      toast({ title: editingActivity ? "Error updating activity" : "Error adding activity", variant: "destructive" });
     }
   };
 
+  const handleDeleteActivity = async () => {
+    if (!deletingActivityId) return;
+
+    try {
+      const { error } = await supabase
+        .from("activities")
+        .delete()
+        .eq("id", deletingActivityId);
+
+      if (error) throw error;
+
+      setActivities(activities.filter(a => a.id !== deletingActivityId));
+      toast({ title: "Activity deleted successfully" });
+    } catch (error) {
+      toast({ title: "Error deleting activity", variant: "destructive" });
+    } finally {
+      setShowDeleteDialog(false);
+      setDeletingActivityId(null);
+    }
+  };
+
+  const openEditDialog = (activity: Activity) => {
+    setEditingActivity(activity);
+    setSelectedType(activity.activity_type as ActivityType);
+    setNewActivity({
+      title: activity.title,
+      description: activity.description || "",
+      crop_id: activity.crop_id || "",
+      quantity: activity.quantity?.toString() || "",
+      quantity_unit: activity.quantity_unit || "",
+      area_covered: activity.area_covered?.toString() || "",
+      area_covered_unit: activity.area_covered_unit || "acres",
+    });
+    setShowAddDialog(true);
+  };
+
+  const openDeleteDialog = (activityId: string) => {
+    setDeletingActivityId(activityId);
+    setShowDeleteDialog(true);
+  };
+
+  const closeDialog = () => {
+    setShowAddDialog(false);
+    setEditingActivity(null);
+    setSelectedType(null);
+    setNewActivity({ title: "", description: "", crop_id: "", quantity: "", quantity_unit: "", area_covered: "", area_covered_unit: "acres" });
+  };
+
   const openAddDialog = (type?: ActivityType) => {
+    setEditingActivity(null);
     if (type) {
       setSelectedType(type);
       setNewActivity({ ...newActivity, title: `${activityLabels[type]} activity` });
+    } else {
+      setNewActivity({ title: "", description: "", crop_id: "", quantity: "", quantity_unit: "", area_covered: "", area_covered_unit: "acres" });
     }
     setShowAddDialog(true);
   };
@@ -301,7 +371,7 @@ export default function Activities() {
                         <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0", colorClass)}>
                           <Icon className="w-5 h-5" />
                         </div>
-                        <div className="flex-1">
+                        <div className="flex-1 min-w-0">
                           <h4 className="font-medium">{activity.title}</h4>
                           <p className="text-sm text-muted-foreground">
                             {crop?.name || "General"}
@@ -312,9 +382,14 @@ export default function Activities() {
                             <p className="text-xs text-muted-foreground mt-1">{activity.description}</p>
                           )}
                         </div>
-                        <span className="text-xs text-muted-foreground capitalize px-2 py-1 bg-muted rounded-lg">
-                          {activity.activity_type}
-                        </span>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEditDialog(activity)}>
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => openDeleteDialog(activity.id)}>
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
@@ -358,11 +433,11 @@ export default function Activities() {
         </Card>
       </div>
 
-      {/* Add Activity Dialog */}
-      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+      {/* Add/Edit Activity Dialog */}
+      <Dialog open={showAddDialog} onOpenChange={closeDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add Activity</DialogTitle>
+            <DialogTitle>{editingActivity ? "Edit Activity" : "Add Activity"}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 mt-4">
             {/* Activity Type Selection */}
@@ -453,11 +528,29 @@ export default function Activities() {
             </div>
 
             <Button className="w-full" onClick={handleAddActivity} disabled={!selectedType || !newActivity.title}>
-              Add Activity
+              {editingActivity ? "Update Activity" : "Add Activity"}
             </Button>
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Activity</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this activity? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteActivity} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
