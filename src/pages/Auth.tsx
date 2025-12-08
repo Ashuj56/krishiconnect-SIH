@@ -291,17 +291,12 @@ export default function Auth() {
       
       {/* Hero Section */}
       <div className="flex-1 flex flex-col items-center justify-center p-6 text-center relative z-10">
-        <div className="w-24 h-24 rounded-3xl bg-white/20 backdrop-blur-sm flex items-center justify-center mb-6 animate-float shadow-2xl border border-white/30">
-          <svg viewBox="0 0 60 60" className="w-14 h-14">
-            <g fill="none" stroke="#FFD54F" strokeWidth="2.5" strokeLinecap="round">
-              <ellipse cx="22" cy="20" rx="4" ry="8" fill="#FFD54F" stroke="none" />
-              <ellipse cx="38" cy="20" rx="4" ry="8" fill="#FFD54F" stroke="none" />
-              <ellipse cx="30" cy="15" rx="4" ry="9" fill="#FFD54F" stroke="none" />
-              <path d="M30 55 L30 25" />
-              <path d="M30 45 Q15 40 10 50" stroke="#81C784" strokeWidth="3" />
-              <path d="M30 45 Q45 40 50 50" stroke="#81C784" strokeWidth="3" />
-            </g>
-          </svg>
+        <div className="w-28 h-28 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-6 animate-float shadow-2xl border border-white/30 overflow-hidden">
+          <img 
+            src="/krishi-connect-logo.jpg" 
+            alt="Krishi Connect Logo" 
+            className="w-full h-full object-cover"
+          />
         </div>
         <h1 className="text-3xl font-bold mb-1 text-white drop-shadow-lg">Krishi Connect</h1>
         <h2 className="text-xl font-semibold text-white/90 font-malayalam mb-2 drop-shadow-md">കൃഷി കണക്ട്</h2>
