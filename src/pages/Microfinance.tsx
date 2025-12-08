@@ -4,10 +4,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { IndianRupee, FileText, Store, TrendingUp, AlertTriangle, CheckCircle2, Clock } from "lucide-react";
+import { IndianRupee, FileText, Store, TrendingUp, AlertTriangle, CheckCircle2, Clock, Shield } from "lucide-react";
 import { LoanRequestForm } from "@/components/microfinance/LoanRequestForm";
 import { MyLoansTab } from "@/components/microfinance/MyLoansTab";
 import { ApprovedVendorsTab } from "@/components/microfinance/ApprovedVendorsTab";
+import { EligibilityCard } from "@/components/microfinance/EligibilityCard";
+import { VerifiedVendorsCard } from "@/components/microfinance/VerifiedVendorsCard";
+import { useMicrofinanceEligibility } from "@/hooks/useMicrofinanceEligibility";
 
 interface LoanStats {
   totalLoans: number;
@@ -30,6 +33,8 @@ export default function Microfinance() {
     overdueAmount: 0,
   });
 
+  const { eligibility, isLoading: eligibilityLoading } = useMicrofinanceEligibility();
+
   useEffect(() => {
     if (user) {
       loadStats();
@@ -38,7 +43,6 @@ export default function Microfinance() {
 
   const loadStats = async () => {
     try {
-      // Get loans
       const { data: loans } = await supabase
         .from('farmer_loans')
         .select('*')
@@ -46,7 +50,6 @@ export default function Microfinance() {
 
       if (!loans) return;
 
-      // Get repayments
       const { data: repayments } = await supabase
         .from('loan_repayments')
         .select('*')
@@ -90,6 +93,15 @@ export default function Microfinance() {
           Get agricultural loans disbursed directly to vendors for your farming needs
         </p>
       </div>
+
+      {/* Eligibility Card */}
+      <EligibilityCard
+        category={eligibility?.category || "Loading..."}
+        loanLimit={eligibility?.loan_limit || "..."}
+        loanLimitAmount={eligibility?.loan_limit_amount || 0}
+        vendorTypes={eligibility?.recommended_vendor_types || []}
+        isLoading={eligibilityLoading}
+      />
 
       {/* Stats Cards */}
       <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
@@ -160,7 +172,7 @@ export default function Microfinance() {
 
       {/* Main Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="request" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
             <span className="hidden sm:inline">Request Loan</span>
@@ -174,10 +186,15 @@ export default function Microfinance() {
               <Badge variant="secondary" className="ml-1">{stats.totalLoans}</Badge>
             )}
           </TabsTrigger>
+          <TabsTrigger value="verified-vendors" className="flex items-center gap-2">
+            <Shield className="h-4 w-4" />
+            <span className="hidden sm:inline">Verified Vendors</span>
+            <span className="sm:hidden">Verified</span>
+          </TabsTrigger>
           <TabsTrigger value="vendors" className="flex items-center gap-2">
             <Store className="h-4 w-4" />
-            <span className="hidden sm:inline">Approved Vendors</span>
-            <span className="sm:hidden">Vendors</span>
+            <span className="hidden sm:inline">Product Vendors</span>
+            <span className="sm:hidden">Products</span>
           </TabsTrigger>
         </TabsList>
 
@@ -190,13 +207,23 @@ export default function Microfinance() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <LoanRequestForm onSuccess={handleLoanSuccess} />
+              <LoanRequestForm 
+                onSuccess={handleLoanSuccess} 
+                maxLoanAmount={eligibility?.loan_limit_amount}
+              />
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="my-loans">
           <MyLoansTab />
+        </TabsContent>
+
+        <TabsContent value="verified-vendors">
+          <VerifiedVendorsCard 
+            vendors={eligibility?.verified_vendors || []}
+            isLoading={eligibilityLoading}
+          />
         </TabsContent>
 
         <TabsContent value="vendors">

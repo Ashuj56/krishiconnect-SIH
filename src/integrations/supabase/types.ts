@@ -395,6 +395,39 @@ export type Database = {
           },
         ]
       }
+      microfinance_vendors: {
+        Row: {
+          business_address: string
+          business_name: string
+          created_at: string
+          district: string
+          id: string
+          is_verified: boolean
+          license_holder: string
+          license_number: string
+        }
+        Insert: {
+          business_address: string
+          business_name: string
+          created_at?: string
+          district: string
+          id?: string
+          is_verified?: boolean
+          license_holder: string
+          license_number: string
+        }
+        Update: {
+          business_address?: string
+          business_name?: string
+          created_at?: string
+          district?: string
+          id?: string
+          is_verified?: boolean
+          license_holder?: string
+          license_number?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           action_url: string | null
