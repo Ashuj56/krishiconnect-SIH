@@ -1,4 +1,4 @@
-# Krishi Sakhi (കൃഷി സഖി) - Complete Technical Documentation
+# Krishi Connect (കൃഷി കണക്ട്) - Complete Technical Documentation
 
 ## Version: 1.0
 ## Last Updated: December 2024
@@ -29,7 +29,7 @@
 
 ## Overview
 
-**Krishi Sakhi** (കൃഷി സഖി - meaning "Farming Companion" in Malayalam) is an AI-powered agricultural assistant web application designed specifically for Kerala farmers in India. The platform provides personalized farming advice, market intelligence, government scheme information, and comprehensive farm management tools.
+**Krishi Connect** (കൃഷി കണക്ട് - meaning "Farming Connection" in Malayalam) is an AI-powered agricultural assistant web application designed specifically for Kerala farmers in India. The platform provides personalized farming advice, market intelligence, government scheme information, and comprehensive farm management tools.
 
 ## Purpose
 

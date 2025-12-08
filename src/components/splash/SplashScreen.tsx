@@ -78,10 +78,10 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
       {/* App Name */}
       <div className="text-center animate-fade-in" style={{ animationDelay: "0.3s" }}>
         <h1 className="text-4xl font-bold text-white mb-2 tracking-wide">
-          Krishi Sakhi
+          Krishi Connect
         </h1>
         <h2 className="text-2xl font-semibold text-white/90 font-malayalam mb-4">
-          കൃഷി സഖി
+          കൃഷി കണക്ട്
         </h2>
         <p className="text-white/80 text-sm">
           Your Personal Farming Assistant

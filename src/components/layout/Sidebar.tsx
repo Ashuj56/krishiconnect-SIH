@@ -44,7 +44,7 @@ export function Sidebar() {
             <Leaf className="w-6 h-6 text-primary-foreground" />
           </div>
           <div>
-            <h1 className="font-bold text-lg">FarmAssist</h1>
+            <h1 className="font-bold text-lg">Krishi Connect</h1>
             <p className="text-xs text-muted-foreground">AI Farming Assistant</p>
           </div>
         </div>

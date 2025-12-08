@@ -45,7 +45,7 @@ serve(async (req) => {
     const langConfig = languageInstructions[language] || languageInstructions['en'];
 
     // Build personalized system prompt with STRICT language enforcement
-    let systemPrompt = `You are Krishi Mitra (കൃഷി മിത്ര / कृषि मित्र), a helpful AI farming assistant for Indian farmers.
+    let systemPrompt = `You are Krishi Connect (കൃഷി കണക്ട് / कृषि कनेक्ट), a helpful AI farming assistant for Indian farmers.
 
 === CRITICAL LANGUAGE REQUIREMENT ===
 ${langConfig.instruction}

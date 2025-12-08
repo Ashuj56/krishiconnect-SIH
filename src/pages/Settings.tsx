@@ -530,7 +530,7 @@ export default function Settings() {
 
         {/* App Version */}
         <p className="text-center text-sm text-muted-foreground pt-4">
-          Krishi Sakhi v1.0.0
+          Krishi Connect v1.0.0
         </p>
       </div>
 
@@ -704,7 +704,7 @@ export default function Settings() {
           </DialogHeader>
           <div className="prose prose-sm dark:prose-invert">
             <h3>Acceptance of Terms</h3>
-            <p>By using Krishi Sakhi, you agree to these terms of service.</p>
+            <p>By using Krishi Connect, you agree to these terms of service.</p>
             
             <h3>Use of Service</h3>
             <p>The service is provided for informational purposes. Farming advice should be verified with local agricultural experts.</p>

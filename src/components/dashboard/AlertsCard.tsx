@@ -134,7 +134,7 @@ export function AlertsCard() {
         generatedAlerts.push({
           id: "welcome",
           type: "info",
-          title: "Welcome to FarmAssist!",
+          title: "Welcome to Krishi Connect!",
           message: "Add your farm and crops to get personalized alerts.",
           time: "now",
         });

@@ -212,7 +212,7 @@ export default function Auth() {
         });
 
         toast({
-          title: "Welcome to Krishi Sakhi!",
+          title: "Welcome to Krishi Connect!",
           description: "Your account and farm profile have been created.",
         });
       }
@@ -303,8 +303,8 @@ export default function Auth() {
             </g>
           </svg>
         </div>
-        <h1 className="text-3xl font-bold mb-1 text-white drop-shadow-lg">Krishi Sakhi</h1>
-        <h2 className="text-xl font-semibold text-white/90 font-malayalam mb-2 drop-shadow-md">കൃഷി സഖി</h2>
+        <h1 className="text-3xl font-bold mb-1 text-white drop-shadow-lg">Krishi Connect</h1>
+        <h2 className="text-xl font-semibold text-white/90 font-malayalam mb-2 drop-shadow-md">കൃഷി കണക്ട്</h2>
         <p className="text-white/80 text-sm drop-shadow-sm">Your AI-Powered Farming Companion</p>
       </div>
 
