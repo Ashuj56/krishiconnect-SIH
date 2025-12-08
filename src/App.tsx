@@ -23,6 +23,7 @@ import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import SoilAnalysis from "./pages/SoilAnalysis";
 import PesticideDistribution from "./pages/PesticideDistribution";
+import Microfinance from "./pages/Microfinance";
 
 const queryClient = new QueryClient();
 
@@ -55,6 +56,7 @@ const App = () => (
                   <Route path="/settings" element={<Settings />} />
                   <Route path="/soil-analysis" element={<SoilAnalysis />} />
                   <Route path="/pesticides" element={<PesticideDistribution />} />
+                  <Route path="/microfinance" element={<Microfinance />} />
                 </Route>
                 <Route path="*" element={<NotFound />} />
               </Routes>

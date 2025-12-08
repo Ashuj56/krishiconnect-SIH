@@ -9,7 +9,8 @@ import {
   FileText,
   Settings,
   Sun,
-  Bug
+  Bug,
+  Banknote
 } from "lucide-react";
 import krishiConnectLogo from "@/assets/krishi-connect-logo.jpg";
 import { NavLink } from "react-router-dom";
@@ -29,6 +30,7 @@ const secondaryNavItems = [
   { icon: Sun, label: "Advisory", path: "/advisory" },
   { icon: TrendingUp, label: "Market Prices", path: "/market" },
   { icon: Bug, label: "Pesticides", path: "/pesticides" },
+  { icon: Banknote, label: "Microfinance", path: "/microfinance" },
   { icon: FileText, label: "Schemes", path: "/schemes" },
   { icon: BookOpen, label: "Knowledge Base", path: "/knowledge" },
 ];

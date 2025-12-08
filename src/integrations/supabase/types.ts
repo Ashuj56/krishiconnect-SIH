@@ -189,6 +189,93 @@ export type Database = {
         }
         Relationships: []
       }
+      farmer_loans: {
+        Row: {
+          approved_amount: number | null
+          created_at: string
+          crop_id: string | null
+          crop_name: string | null
+          duration_months: number
+          eligibility_score: number | null
+          emi: number | null
+          id: string
+          interest_rate: number | null
+          lender_id: string | null
+          next_due_date: string | null
+          proof_url: string | null
+          purpose: string
+          rejection_reason: string | null
+          requested_amount: number
+          start_date: string | null
+          status: string
+          updated_at: string
+          user_id: string
+          vendor_id: string | null
+          vendor_name: string | null
+        }
+        Insert: {
+          approved_amount?: number | null
+          created_at?: string
+          crop_id?: string | null
+          crop_name?: string | null
+          duration_months?: number
+          eligibility_score?: number | null
+          emi?: number | null
+          id?: string
+          interest_rate?: number | null
+          lender_id?: string | null
+          next_due_date?: string | null
+          proof_url?: string | null
+          purpose: string
+          rejection_reason?: string | null
+          requested_amount: number
+          start_date?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+          vendor_id?: string | null
+          vendor_name?: string | null
+        }
+        Update: {
+          approved_amount?: number | null
+          created_at?: string
+          crop_id?: string | null
+          crop_name?: string | null
+          duration_months?: number
+          eligibility_score?: number | null
+          emi?: number | null
+          id?: string
+          interest_rate?: number | null
+          lender_id?: string | null
+          next_due_date?: string | null
+          proof_url?: string | null
+          purpose?: string
+          rejection_reason?: string | null
+          requested_amount?: number
+          start_date?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+          vendor_id?: string | null
+          vendor_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "farmer_loans_crop_id_fkey"
+            columns: ["crop_id"]
+            isOneToOne: false
+            referencedRelation: "crops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "farmer_loans_lender_id_fkey"
+            columns: ["lender_id"]
+            isOneToOne: false
+            referencedRelation: "lenders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       farms: {
         Row: {
           area_unit: string | null
@@ -227,6 +314,86 @@ export type Database = {
           water_source?: string | null
         }
         Relationships: []
+      }
+      lenders: {
+        Row: {
+          contact_info: string | null
+          created_at: string
+          description: string | null
+          id: string
+          interest_rate: number
+          loan_limit: number
+          logo_url: string | null
+          min_credit_score: number
+          name: string
+          processing_fee: number
+        }
+        Insert: {
+          contact_info?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          interest_rate?: number
+          loan_limit?: number
+          logo_url?: string | null
+          min_credit_score?: number
+          name: string
+          processing_fee?: number
+        }
+        Update: {
+          contact_info?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          interest_rate?: number
+          loan_limit?: number
+          logo_url?: string | null
+          min_credit_score?: number
+          name?: string
+          processing_fee?: number
+        }
+        Relationships: []
+      }
+      loan_repayments: {
+        Row: {
+          amount: number
+          created_at: string
+          due_date: string
+          id: string
+          loan_id: string
+          paid_date: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          due_date: string
+          id?: string
+          loan_id: string
+          paid_date?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          due_date?: string
+          id?: string
+          loan_id?: string
+          paid_date?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loan_repayments_loan_id_fkey"
+            columns: ["loan_id"]
+            isOneToOne: false
+            referencedRelation: "farmer_loans"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       notifications: {
         Row: {
