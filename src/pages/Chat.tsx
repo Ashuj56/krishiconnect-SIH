@@ -424,7 +424,7 @@ export default function Chat() {
               <Leaf className="w-6 h-6 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="font-semibold text-lg">Krishi Sakhi</h1>
+              <h1 className="font-semibold text-lg">Krishi Connect</h1>
               <p className="text-xs text-primary-foreground/80 flex items-center gap-1">
                 <span className="w-2 h-2 bg-secondary rounded-full animate-pulse" />
                 {farmerContext?.farmerName ? `Hi, ${farmerContext.farmerName.split(' ')[0]}` : 'Online'}
