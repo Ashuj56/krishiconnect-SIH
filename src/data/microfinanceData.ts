@@ -5,7 +5,8 @@ export const loanPurposes = [
   { value: 'pesticides', label: 'Pest Control', icon: '🐛' },
   { value: 'seeds', label: 'Seeds', icon: '🌾' },
   { value: 'equipment', label: 'Equipment', icon: '🔧' },
-  { value: 'emergency', label: 'Emergency', icon: '🚨' },
+  { value: 'labour', label: 'Labour', icon: '👷' },
+  { value: 'harvesting', label: 'Harvesting', icon: '🌾' },
 ];
 
 // Crop stages with loan eligibility multipliers
