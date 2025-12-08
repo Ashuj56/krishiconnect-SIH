@@ -4,22 +4,24 @@ import {
   Calendar, 
   Scan, 
   User, 
-  Leaf, 
   TrendingUp, 
   BookOpen, 
   FileText,
   Settings,
   Sun
 } from "lucide-react";
+import krishiConnectLogo from "@/assets/krishi-connect-logo.jpg";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
+
+import { Sprout } from "lucide-react";
 
 const mainNavItems = [
   { icon: Home, label: "Dashboard", path: "/" },
   { icon: MessageCircle, label: "AI Assistant", path: "/chat" },
   { icon: Scan, label: "Scanner", path: "/scanner" },
   { icon: Calendar, label: "Activities", path: "/activities" },
-  { icon: Leaf, label: "Farm Profile", path: "/farm" },
+  { icon: Sprout, label: "Farm Profile", path: "/farm" },
 ];
 
 const secondaryNavItems = [
@@ -40,8 +42,12 @@ export function Sidebar() {
       {/* Logo */}
       <div className="p-6 border-b border-border">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center">
-            <Leaf className="w-6 h-6 text-primary-foreground" />
+          <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/20">
+            <img 
+              src={krishiConnectLogo} 
+              alt="Krishi Connect Logo" 
+              className="w-full h-full object-cover"
+            />
           </div>
           <div>
             <h1 className="font-bold text-lg">Krishi Connect</h1>
