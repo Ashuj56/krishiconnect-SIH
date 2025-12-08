@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Leaf, Mail, Lock, User, ArrowRight, Eye, EyeOff, Phone, MapPin, Mountain, Droplets, Globe } from "lucide-react";
+import { Leaf, Mail, Lock, User, ArrowRight, Eye, EyeOff, Phone, MapPin, Mountain, Droplets, Globe, Navigation, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -43,6 +43,8 @@ export default function Auth() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isDetectingLocation, setIsDetectingLocation] = useState(false);
+  const [soilDetectedByGPS, setSoilDetectedByGPS] = useState(false);
   
   const navigate = useNavigate();
   const locationHook = useLocation();
@@ -130,6 +132,7 @@ export default function Auth() {
   // Auto-fill soil type when district changes
   const handleDistrictChange = (selectedDistrict: string) => {
     setDistrict(selectedDistrict);
+    setSoilDetectedByGPS(false);
     if (selectedDistrict) {
       const soilTypes = getSoilTypesForDistrict(selectedDistrict);
       setAvailableSoilTypes(soilTypes);
@@ -139,6 +142,78 @@ export default function Auth() {
       setAvailableSoilTypes([]);
       setSoilType("");
     }
+  };
+
+  // Detect location and soil type using GPS
+  const handleDetectLocation = async () => {
+    if (!navigator.geolocation) {
+      toast({
+        title: "Location Not Supported",
+        description: "Your browser does not support location services.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsDetectingLocation(true);
+    
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        
+        try {
+          const { data, error } = await supabase.functions.invoke('get-soil-type', {
+            body: { latitude, longitude }
+          });
+
+          if (error) throw error;
+
+          if (data?.success) {
+            setDistrict(data.district);
+            setSoilType(data.soil_type);
+            setAvailableSoilTypes(data.soil_types || []);
+            setSoilDetectedByGPS(true);
+            
+            toast({
+              title: "Location Detected",
+              description: `District: ${data.district}, Soil: ${data.soil_type}`,
+            });
+          } else {
+            toast({
+              title: "Detection Failed",
+              description: data?.message || "Could not detect soil type for this location.",
+              variant: "destructive",
+            });
+          }
+        } catch (error) {
+          console.error("Soil detection error:", error);
+          toast({
+            title: "Detection Failed",
+            description: "Unable to detect soil type. Please select manually.",
+            variant: "destructive",
+          });
+        } finally {
+          setIsDetectingLocation(false);
+        }
+      },
+      (error) => {
+        setIsDetectingLocation(false);
+        let message = "Unable to get your location.";
+        if (error.code === error.PERMISSION_DENIED) {
+          message = "Location permission denied. Please enable location access.";
+        } else if (error.code === error.POSITION_UNAVAILABLE) {
+          message = "Location information unavailable.";
+        } else if (error.code === error.TIMEOUT) {
+          message = "Location request timed out.";
+        }
+        toast({
+          title: "Location Error",
+          description: message,
+          variant: "destructive",
+        });
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
   };
 
   const validateSignIn = (): boolean => {
@@ -573,6 +648,36 @@ export default function Auth() {
           {/* Sign Up Step 2 - Farm Details */}
           {mode === "signup" && signupStep === 2 && (
             <>
+              {/* GPS Location Detection Button */}
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full h-14 gap-2 border-primary/30 hover:bg-primary/10"
+                onClick={handleDetectLocation}
+                disabled={isDetectingLocation}
+              >
+                {isDetectingLocation ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Detecting Location...
+                  </>
+                ) : (
+                  <>
+                    <Navigation className="w-5 h-5" />
+                    Auto-Detect Location & Soil Type
+                  </>
+                )}
+              </Button>
+              
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-border" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-card px-2 text-muted-foreground">or select manually</span>
+                </div>
+              </div>
+
               {/* District Selection */}
               <div className="space-y-1.5">
                 <div className="relative">
@@ -627,16 +732,20 @@ export default function Auth() {
                 {errors.landArea && <p className="text-xs text-destructive pl-1">{errors.landArea}</p>}
               </div>
 
-              {/* Soil Type (Auto-filled based on district) */}
+              {/* Soil Type (Auto-filled based on GPS or district) */}
               <div className="space-y-1.5">
                 <div className="relative">
                   <Mountain className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <select
                     value={soilType}
-                    onChange={(e) => setSoilType(e.target.value)}
+                    onChange={(e) => {
+                      setSoilType(e.target.value);
+                      setSoilDetectedByGPS(false);
+                    }}
                     className={cn(
                       "w-full h-14 pl-12 pr-4 rounded-xl bg-muted border-2 border-transparent focus:ring-0 focus:border-primary/50 outline-none appearance-none",
                       errors.soilType && "border-destructive",
+                      soilDetectedByGPS && "border-primary/50 bg-primary/5",
                       !soilType && "text-muted-foreground"
                     )}
                   >
@@ -650,7 +759,16 @@ export default function Auth() {
                   </select>
                 </div>
                 {soilType && district && (
-                  <p className="text-xs text-muted-foreground pl-1">Auto-detected for {district}</p>
+                  <p className="text-xs text-muted-foreground pl-1 flex items-center gap-1">
+                    {soilDetectedByGPS ? (
+                      <>
+                        <Navigation className="w-3 h-3" />
+                        Detected via GPS for {district}
+                      </>
+                    ) : (
+                      <>Auto-detected for {district}</>
+                    )}
+                  </p>
                 )}
                 {errors.soilType && <p className="text-xs text-destructive pl-1">{errors.soilType}</p>}
               </div>

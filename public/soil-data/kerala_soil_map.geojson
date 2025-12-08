@@ -1,0 +1,173 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "district": "Thiruvananthapuram",
+        "soil_type": "Fairly rich brown loam of laterite",
+        "soil_types": ["Fairly rich brown loam of laterite", "Sandy loam", "Rich dark brown loam (granite origin)"]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[76.65, 8.17], [77.17, 8.17], [77.17, 8.89], [76.65, 8.89], [76.65, 8.17]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "district": "Kollam",
+        "soil_type": "Sandy loam",
+        "soil_types": ["Sandy loam", "Laterite soil"]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[76.48, 8.76], [77.16, 8.76], [77.16, 9.26], [76.48, 9.26], [76.48, 8.76]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "district": "Pathanamthitta",
+        "soil_type": "Clay soil",
+        "soil_types": ["Clay soil", "Laterite soil"]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[76.69, 9.11], [77.28, 9.11], [77.28, 9.56], [76.69, 9.56], [76.69, 9.11]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "district": "Alappuzha",
+        "soil_type": "Sandy loam",
+        "soil_types": ["Sandy loam", "Sandy soil", "Clay loam with high acidity"]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[76.26, 9.10], [76.78, 9.10], [76.78, 9.73], [76.26, 9.73], [76.26, 9.10]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "district": "Kottayam",
+        "soil_type": "Laterite soil",
+        "soil_types": ["Laterite soil", "Laterite soil (upper regions)", "Alluvial soil"]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[76.37, 9.40], [77.01, 9.40], [77.01, 9.94], [76.37, 9.94], [76.37, 9.40]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "district": "Idukki",
+        "soil_type": "Laterite soil",
+        "soil_types": ["Laterite soil", "Alluvial soil"]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[76.77, 9.58], [77.45, 9.58], [77.45, 10.21], [76.77, 10.21], [76.77, 9.58]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "district": "Ernakulam",
+        "soil_type": "Laterite soil",
+        "soil_types": ["Laterite soil", "Sandy loam", "Alluvial soil"]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[76.18, 9.82], [76.78, 9.82], [76.78, 10.31], [76.18, 10.31], [76.18, 9.82]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "district": "Thrissur",
+        "soil_type": "Sandy loam",
+        "soil_types": ["Sandy loam", "Laterite soil", "Clayey soil"]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[75.92, 10.14], [76.59, 10.14], [76.59, 10.68], [75.92, 10.68], [75.92, 10.14]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "district": "Palakkad",
+        "soil_type": "Alluvial soil",
+        "soil_types": ["Alluvial soil", "Laterite soil", "Black soil"]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[76.07, 10.44], [76.93, 10.44], [76.93, 11.14], [76.07, 11.14], [76.07, 10.44]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "district": "Malappuram",
+        "soil_type": "Laterite soil",
+        "soil_types": ["Laterite soil", "Sandy soil"]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[75.83, 10.73], [76.58, 10.73], [76.58, 11.28], [75.83, 11.28], [75.83, 10.73]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "district": "Kozhikode",
+        "soil_type": "Sandy soil",
+        "soil_types": ["Sandy soil", "Laterite soil"]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[75.77, 11.08], [76.19, 11.08], [76.19, 11.60], [75.77, 11.60], [75.77, 11.08]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "district": "Wayanad",
+        "soil_type": "Sandy soil",
+        "soil_types": ["Sandy soil", "Laterite soil", "Loamy soil"]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[75.78, 11.44], [76.45, 11.44], [76.45, 12.01], [75.78, 12.01], [75.78, 11.44]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "district": "Kannur",
+        "soil_type": "Laterite soil",
+        "soil_types": ["Laterite soil", "Sandy soil"]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[75.28, 11.56], [76.01, 11.56], [76.01, 12.21], [75.28, 12.21], [75.28, 11.56]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "district": "Kasaragod",
+        "soil_type": "Laterite soil",
+        "soil_types": ["Laterite soil", "Sandy soil"]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[74.86, 12.03], [75.56, 12.03], [75.56, 12.78], [74.86, 12.78], [74.86, 12.03]]]
+      }
+    }
+  ]
+}

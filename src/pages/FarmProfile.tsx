@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { MapPin, Droplets, Edit2, Plus, Leaf, Mountain, Save, X, Loader2, Trash2 } from "lucide-react";
+import { MapPin, Droplets, Edit2, Plus, Leaf, Mountain, Save, X, Loader2, Trash2, Navigation } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -44,10 +44,13 @@ export default function FarmProfile() {
   const [isSaving, setIsSaving] = useState(false);
   const [showAddCrop, setShowAddCrop] = useState(false);
   const [newCrop, setNewCrop] = useState({ name: "", variety: "", area: "", stage: "", health: "good" });
+  const [isDetectingLocation, setIsDetectingLocation] = useState(false);
+  const [soilDetectedByGPS, setSoilDetectedByGPS] = useState(false);
 
   // Handle district change and auto-fill soil type
   const handleDistrictChange = (selectedDistrict: string) => {
     setEditForm({ ...editForm, location: selectedDistrict });
+    setSoilDetectedByGPS(false);
     if (selectedDistrict) {
       const soilTypes = getSoilTypesForDistrict(selectedDistrict);
       setAvailableSoilTypes(soilTypes);
@@ -59,6 +62,81 @@ export default function FarmProfile() {
     } else {
       setAvailableSoilTypes([]);
     }
+  };
+
+  // Detect location and soil type using GPS
+  const handleDetectLocation = async () => {
+    if (!navigator.geolocation) {
+      toast({
+        title: "Location Not Supported",
+        description: "Your browser does not support location services.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsDetectingLocation(true);
+    
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        
+        try {
+          const { data, error } = await supabase.functions.invoke('get-soil-type', {
+            body: { latitude, longitude }
+          });
+
+          if (error) throw error;
+
+          if (data?.success) {
+            setEditForm(prev => ({
+              ...prev,
+              location: data.district,
+              soil_type: data.soil_type
+            }));
+            setAvailableSoilTypes(data.soil_types || []);
+            setSoilDetectedByGPS(true);
+            
+            toast({
+              title: "Location Detected",
+              description: `District: ${data.district}, Soil: ${data.soil_type}`,
+            });
+          } else {
+            toast({
+              title: "Detection Failed",
+              description: data?.message || "Could not detect soil type for this location.",
+              variant: "destructive",
+            });
+          }
+        } catch (error) {
+          console.error("Soil detection error:", error);
+          toast({
+            title: "Detection Failed",
+            description: "Unable to detect soil type. Please select manually.",
+            variant: "destructive",
+          });
+        } finally {
+          setIsDetectingLocation(false);
+        }
+      },
+      (error) => {
+        setIsDetectingLocation(false);
+        let message = "Unable to get your location.";
+        if (error.code === error.PERMISSION_DENIED) {
+          message = "Location permission denied. Please enable location access.";
+        } else if (error.code === error.POSITION_UNAVAILABLE) {
+          message = "Location information unavailable.";
+        } else if (error.code === error.TIMEOUT) {
+          message = "Location request timed out.";
+        }
+        toast({
+          title: "Location Error",
+          description: message,
+          variant: "destructive",
+        });
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
   };
 
   useEffect(() => {
@@ -247,18 +325,33 @@ export default function FarmProfile() {
                 <div className="flex items-center gap-1 mt-1 opacity-90">
                   <MapPin className="w-4 h-4" />
                   {isEditing ? (
-                    <select
-                      value={editForm.location || ""}
-                      onChange={(e) => handleDistrictChange(e.target.value)}
-                      className="text-sm bg-primary-foreground/10 border border-primary-foreground/30 rounded-lg px-2 py-1 outline-none text-primary-foreground"
-                    >
-                      <option value="" className="text-foreground bg-background">Select District</option>
-                      {keralaDistricts.map((district) => (
-                        <option key={district} value={district} className="text-foreground bg-background">
-                          {district}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={editForm.location || ""}
+                        onChange={(e) => handleDistrictChange(e.target.value)}
+                        className="text-sm bg-primary-foreground/10 border border-primary-foreground/30 rounded-lg px-2 py-1 outline-none text-primary-foreground"
+                      >
+                        <option value="" className="text-foreground bg-background">Select District</option>
+                        {keralaDistricts.map((district) => (
+                          <option key={district} value={district} className="text-foreground bg-background">
+                            {district}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        onClick={handleDetectLocation}
+                        disabled={isDetectingLocation}
+                        className="p-1.5 rounded-lg bg-primary-foreground/20 hover:bg-primary-foreground/30 transition-colors"
+                        title="Detect location via GPS"
+                      >
+                        {isDetectingLocation ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Navigation className="w-4 h-4" />
+                        )}
+                      </button>
+                    </div>
                   ) : (
                     <span className="text-sm">{farm.location ? `${farm.location}, Kerala` : "No location set"}</span>
                   )}
