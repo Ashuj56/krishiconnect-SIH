@@ -19,7 +19,8 @@ interface Activity {
   activity_date: string;
   quantity: number | null;
   quantity_unit: string | null;
-  cost: number | null;
+  area_covered: number | null;
+  area_covered_unit: string | null;
 }
 
 interface Crop {
@@ -69,7 +70,8 @@ export default function Activities() {
     crop_id: "",
     quantity: "",
     quantity_unit: "",
-    cost: "",
+    area_covered: "",
+    area_covered_unit: "acres",
   });
 
   useEffect(() => {
@@ -130,7 +132,8 @@ export default function Activities() {
           activity_date: selectedDate.toISOString().split("T")[0],
           quantity: newActivity.quantity ? parseFloat(newActivity.quantity) : null,
           quantity_unit: newActivity.quantity_unit || null,
-          cost: newActivity.cost ? parseFloat(newActivity.cost) : null,
+          area_covered: newActivity.area_covered ? parseFloat(newActivity.area_covered) : null,
+          area_covered_unit: newActivity.area_covered_unit || "acres",
         })
         .select()
         .single();
@@ -140,7 +143,7 @@ export default function Activities() {
       setActivities([data, ...activities]);
       setShowAddDialog(false);
       setSelectedType(null);
-      setNewActivity({ title: "", description: "", crop_id: "", quantity: "", quantity_unit: "", cost: "" });
+      setNewActivity({ title: "", description: "", crop_id: "", quantity: "", quantity_unit: "", area_covered: "", area_covered_unit: "acres" });
       toast({ title: "Activity added successfully" });
     } catch (error) {
       toast({ title: "Error adding activity", variant: "destructive" });
@@ -303,7 +306,7 @@ export default function Activities() {
                           <p className="text-sm text-muted-foreground">
                             {crop?.name || "General"}
                             {activity.quantity && ` • ${activity.quantity} ${activity.quantity_unit || ""}`}
-                            {activity.cost && ` • ₹${activity.cost}`}
+                            {activity.area_covered && ` • ${activity.area_covered} ${activity.area_covered_unit || "acres"}`}
                           </p>
                           {activity.description && (
                             <p className="text-xs text-muted-foreground mt-1">{activity.description}</p>
@@ -429,13 +432,25 @@ export default function Activities() {
               />
             </div>
 
-            <input
-              type="number"
-              placeholder="Cost (₹)"
-              value={newActivity.cost}
-              onChange={(e) => setNewActivity({ ...newActivity, cost: e.target.value })}
-              className="w-full h-12 px-4 rounded-xl bg-muted border-2 border-transparent focus:border-primary/50 outline-none"
-            />
+            <div className="grid grid-cols-2 gap-3">
+              <input
+                type="number"
+                placeholder="Area covered"
+                value={newActivity.area_covered}
+                onChange={(e) => setNewActivity({ ...newActivity, area_covered: e.target.value })}
+                className="w-full h-12 px-4 rounded-xl bg-muted border-2 border-transparent focus:border-primary/50 outline-none"
+              />
+              <select
+                value={newActivity.area_covered_unit}
+                onChange={(e) => setNewActivity({ ...newActivity, area_covered_unit: e.target.value })}
+                className="w-full h-12 px-4 rounded-xl bg-muted border-2 border-transparent focus:border-primary/50 outline-none"
+              >
+                <option value="acres">Acres</option>
+                <option value="hectares">Hectares</option>
+                <option value="cents">Cents</option>
+                <option value="sq.m">Sq. Meters</option>
+              </select>
+            </div>
 
             <Button className="w-full" onClick={handleAddActivity} disabled={!selectedType || !newActivity.title}>
               Add Activity
