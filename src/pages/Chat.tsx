@@ -40,14 +40,51 @@ interface FarmerContext {
     activity_type: string;
     activity_date: string;
     description: string | null;
+    quantity?: number | null;
+    quantity_unit?: string | null;
+    area_covered?: number | null;
+    area_covered_unit?: string | null;
   }>;
+  soilReport?: {
+    nitrogen: number;
+    phosphorus: number;
+    potassium: number;
+    ph: number;
+  };
 }
 
-const quickQuestions = [
-  "When should I irrigate my paddy?",
-  "What fertilizer for banana plants?",
-  "How to control pests naturally?",
-  "Best time to harvest coconuts?",
+interface WeatherData {
+  temperature: number;
+  humidity: number;
+  condition: string;
+  rainfall?: number;
+  windSpeed?: number;
+  forecast?: string;
+}
+
+// Kerala-specific quick questions organized by category
+const keralaQuickQuestions = [
+  // Pest & Disease (KAU/ICAR)
+  { text: "എന്റെ നെൽകൃഷിയിൽ തവിട്ടു ചാഴി ആക്രമണം. എന്തു ചെയ്യണം?", en: "My paddy has Brown Planthopper attack. What should I do?", category: "pest" },
+  { text: "Pepper quick wilt symptoms and treatment", en: "Pepper quick wilt symptoms and treatment", category: "pest" },
+  { text: "Banana Sigatoka leaf spot management", en: "Banana Sigatoka leaf spot management", category: "pest" },
+  
+  // Fertilizer (KAU dosage)
+  { text: "KAU fertilizer schedule for Nendran banana", en: "KAU fertilizer schedule for Nendran banana", category: "fertilizer" },
+  { text: "Coconut palm NPK dosage per palm", en: "Coconut palm NPK dosage per palm", category: "fertilizer" },
+  { text: "Organic alternatives for rice fertilizers", en: "Organic alternatives for rice fertilizers", category: "fertilizer" },
+  
+  // Crop Stage Operations
+  { text: "Rice at panicle initiation - what operations?", en: "Rice at panicle initiation - what operations?", category: "stage" },
+  { text: "Ginger earthing up and mulching schedule", en: "Ginger earthing up and mulching schedule", category: "stage" },
+  
+  // Weather-based
+  { text: "Should I spray pesticide if rain is expected?", en: "Should I spray pesticide if rain is expected?", category: "weather" },
+  { text: "Monsoon precautions for pepper gardens", en: "Monsoon precautions for pepper gardens", category: "weather" },
+  
+  // District-specific
+  { text: "Best crops for Wayanad soil conditions", en: "Best crops for Wayanad soil conditions", category: "soil" },
+  { text: "Kuttanad rice varieties and practices", en: "Kuttanad rice varieties and practices", category: "soil" },
 ];
 
 const initialMessages: Message[] = [
@@ -75,8 +112,10 @@ export default function Chat() {
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [currentLang, setCurrentLang] = useState('en');
   const [farmerContext, setFarmerContext] = useState<FarmerContext | null>(null);
+  const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
   const [isLoadingContext, setIsLoadingContext] = useState(true);
   const [conversationMode, setConversationMode] = useState(false);
+  const [questionCategory, setQuestionCategory] = useState<string>("all");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -125,7 +164,8 @@ export default function Chat() {
         body: JSON.stringify({ 
           messages: chatMessages,
           farmerContext: farmerContext,
-          language: currentLang
+          language: currentLang,
+          weather: weatherData
         }),
       });
 
@@ -236,7 +276,7 @@ export default function Chat() {
     } finally {
       setIsTyping(false);
     }
-  }, [messages, isTyping, user, farmerContext, voiceEnabled, currentLang, toast]);
+  }, [messages, isTyping, user, farmerContext, weatherData, voiceEnabled, currentLang, toast]);
 
   // Speech hook for voice input/output
   const { 
@@ -302,17 +342,49 @@ export default function Chat() {
           .select('name, variety, area, area_unit, current_stage, health_status, planting_date')
           .eq('user_id', user.id);
 
-        // Fetch recent activities (last 7 days)
+        // Fetch recent activities (last 7 days) with quantity and area
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
         
         const { data: activities } = await supabase
           .from('activities')
-          .select('title, activity_type, activity_date, description')
+          .select('title, activity_type, activity_date, description, quantity, quantity_unit, area_covered, area_covered_unit')
           .eq('user_id', user.id)
           .gte('activity_date', sevenDaysAgo.toISOString().split('T')[0])
           .order('activity_date', { ascending: false })
           .limit(10);
+
+        // Fetch latest soil report
+        const { data: soilReports } = await supabase
+          .from('soil_reports')
+          .select('nitrogen, phosphorus, potassium, ph')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(1);
+
+        const soilReport = soilReports?.[0];
+
+        // Fetch weather data for farmer's location
+        const location = farm?.location || profile?.location;
+        if (location) {
+          try {
+            const { data: weatherResponse } = await supabase.functions.invoke('weather', {
+              body: { location }
+            });
+            if (weatherResponse?.current) {
+              setWeatherData({
+                temperature: weatherResponse.current.temperature,
+                humidity: weatherResponse.current.humidity,
+                condition: weatherResponse.current.condition,
+                rainfall: weatherResponse.current.rainfall || 0,
+                windSpeed: weatherResponse.current.windSpeed,
+                forecast: weatherResponse.forecast?.[0]?.condition
+              });
+            }
+          } catch (e) {
+            console.error("Weather fetch error:", e);
+          }
+        }
 
         setFarmerContext({
           farmerName: profile?.full_name || undefined,
@@ -326,6 +398,12 @@ export default function Chat() {
           } : undefined,
           crops: crops || undefined,
           recentActivities: activities || undefined,
+          soilReport: soilReport ? {
+            nitrogen: soilReport.nitrogen,
+            phosphorus: soilReport.phosphorus,
+            potassium: soilReport.potassium,
+            ph: soilReport.ph
+          } : undefined,
         });
 
         // Update initial message with personalized greeting
@@ -508,23 +586,48 @@ export default function Chat() {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Quick Questions */}
+      {/* Kerala Quick Questions */}
       {messages.length === 1 && (
         <div className="px-4 pb-2">
-          <p className="text-xs text-muted-foreground mb-2">Quick Questions</p>
-          <div className="flex flex-wrap gap-2">
-            {quickQuestions.map((q) => (
-              <Button
-                key={q}
-                variant="outline"
-                size="sm"
-                className="text-xs h-auto py-2 px-3"
-                onClick={() => setInput(q)}
-              >
-                {q}
-              </Button>
-            ))}
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-xs text-muted-foreground">Kerala Farming Questions (KAU/ICAR)</p>
+            <select
+              value={questionCategory}
+              onChange={(e) => setQuestionCategory(e.target.value)}
+              className="text-xs h-6 px-2 rounded bg-muted border-0"
+            >
+              <option value="all">All</option>
+              <option value="pest">Pest & Disease</option>
+              <option value="fertilizer">Fertilizer</option>
+              <option value="stage">Crop Stage</option>
+              <option value="weather">Weather</option>
+              <option value="soil">Soil & District</option>
+            </select>
           </div>
+          <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
+            {keralaQuickQuestions
+              .filter(q => questionCategory === "all" || q.category === questionCategory)
+              .slice(0, 6)
+              .map((q) => (
+                <Button
+                  key={q.en}
+                  variant="outline"
+                  size="sm"
+                  className="text-xs h-auto py-2 px-3 text-left"
+                  onClick={() => setInput(currentLang === 'ml' ? q.text : q.en)}
+                >
+                  {currentLang === 'ml' && q.text.match(/[\u0D00-\u0D7F]/) ? q.text : q.en}
+                </Button>
+              ))}
+          </div>
+          {weatherData && (
+            <div className="mt-2 p-2 bg-muted/50 rounded-lg">
+              <p className="text-xs text-muted-foreground">
+                Current: {weatherData.temperature}°C, {weatherData.condition}, Humidity: {weatherData.humidity}%
+                {weatherData.rainfall && weatherData.rainfall > 0 && ` | Rain: ${weatherData.rainfall}mm`}
+              </p>
+            </div>
+          )}
         </div>
       )}
 
