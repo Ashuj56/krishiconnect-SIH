@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
+import krishiConnectLogo from "@/assets/krishi-connect-logo.jpg";
 
 interface SplashScreenProps {
   onComplete: () => void;
@@ -51,27 +52,12 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
 
       {/* Logo */}
       <div className="relative animate-scale-in">
-        <div className="w-28 h-28 rounded-3xl bg-white/20 backdrop-blur-sm flex items-center justify-center mb-8 shadow-2xl border border-white/30">
-          <svg viewBox="0 0 60 60" className="w-16 h-16">
-            {/* Paddy/Rice Plant Icon */}
-            <g fill="none" stroke="#FFD54F" strokeWidth="2.5" strokeLinecap="round">
-              {/* Center stem */}
-              <path d="M30 55 L30 25" />
-              {/* Left grains */}
-              <ellipse cx="22" cy="20" rx="4" ry="8" fill="#FFD54F" stroke="none" />
-              <ellipse cx="18" cy="28" rx="4" ry="7" fill="#FFD54F" stroke="none" />
-              <ellipse cx="20" cy="38" rx="3" ry="6" fill="#FFD54F" stroke="none" />
-              {/* Right grains */}
-              <ellipse cx="38" cy="20" rx="4" ry="8" fill="#FFD54F" stroke="none" />
-              <ellipse cx="42" cy="28" rx="4" ry="7" fill="#FFD54F" stroke="none" />
-              <ellipse cx="40" cy="38" rx="3" ry="6" fill="#FFD54F" stroke="none" />
-              {/* Center grain */}
-              <ellipse cx="30" cy="15" rx="4" ry="9" fill="#FFD54F" stroke="none" />
-              {/* Leaves */}
-              <path d="M30 45 Q15 40 10 50" stroke="#81C784" strokeWidth="3" />
-              <path d="M30 45 Q45 40 50 50" stroke="#81C784" strokeWidth="3" />
-            </g>
-          </svg>
+        <div className="w-32 h-32 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-8 shadow-2xl border border-white/30 overflow-hidden">
+          <img 
+            src={krishiConnectLogo} 
+            alt="Krishi Connect Logo" 
+            className="w-full h-full object-cover"
+          />
         </div>
       </div>
 
