@@ -9,11 +9,10 @@ interface AnimatedHeroHeaderProps {
 }
 
 const farmImages = [
-  "/images/kerala-bg-1.jpg",
-  "/images/kerala-bg-2.jpg",
-  "/images/kerala-bg-3.jpg",
-  "/images/kerala-bg-4.jpg",
-  "/images/kerala-bg-5.jpg",
+  "/images/kerala-farm-hd-1.jpg",
+  "/images/kerala-farm-hd-2.jpg",
+  "/images/kerala-farm-hd-3.jpg",
+  "/images/kerala-farm-hd-4.jpg",
 ];
 
 export function AnimatedHeroHeader({ greeting, userName, farmInfo }: AnimatedHeroHeaderProps) {
