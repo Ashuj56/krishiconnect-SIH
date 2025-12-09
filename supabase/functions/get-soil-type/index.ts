@@ -168,10 +168,11 @@ serve(async (req) => {
     if (!result) {
       return new Response(
         JSON.stringify({ 
+          success: false,
           error: "Location not within Kerala boundaries",
-          message: "Unable to detect soil type for this location. Please select manually."
+          message: "Soil type not found for this location. Please recheck."
         }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
