@@ -174,14 +174,19 @@ export default function Auth() {
             setAvailableSoilTypes(data.soil_types || []);
             setSoilDetectedByGPS(true);
             
+            // Try to get village from reverse geocoding
+            if (data.location?.latitude && data.location?.longitude) {
+              setVillage(data.village || '');
+            }
+            
             toast({
               title: "Location Detected",
               description: `District: ${data.district}, Soil: ${data.soil_type}`,
             });
           } else {
             toast({
-              title: "Detection Failed",
-              description: data?.message || "Could not detect soil type for this location.",
+              title: "Soil type not found",
+              description: "Soil type not found for this location. Please recheck.",
               variant: "destructive",
             });
           }

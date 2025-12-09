@@ -7,6 +7,13 @@ interface NutrientStatus {
   ideal: { min: number; max: number };
 }
 
+// Indian Standard ranges for display
+const nutrientRanges = {
+  N: { low: '<280', medium: '280-560', high: '>560', unit: 'kg/ha' },
+  P: { low: '<10', medium: '10-25', high: '>25', unit: 'kg/ha' },
+  K: { low: '<110', medium: '110-280', high: '>280', unit: 'kg/ha' },
+};
+
 interface PHStatus {
   category: string;
   categoryMl: string;
@@ -110,8 +117,30 @@ export function SoilAnalysisChart({ nitrogen, phosphorus, potassium, ph, languag
           </ResponsiveContainer>
         </div>
 
+        {/* Range Info Table */}
+        <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs">
+          <div className="p-2 rounded-lg bg-muted/50">
+            <div className="font-medium text-foreground">N</div>
+            <div className="text-destructive">{nutrientRanges.N.low}</div>
+            <div className="text-warning">{nutrientRanges.N.medium}</div>
+            <div className="text-primary">{nutrientRanges.N.high}</div>
+          </div>
+          <div className="p-2 rounded-lg bg-muted/50">
+            <div className="font-medium text-foreground">P</div>
+            <div className="text-destructive">{nutrientRanges.P.low}</div>
+            <div className="text-warning">{nutrientRanges.P.medium}</div>
+            <div className="text-primary">{nutrientRanges.P.high}</div>
+          </div>
+          <div className="p-2 rounded-lg bg-muted/50">
+            <div className="font-medium text-foreground">K</div>
+            <div className="text-destructive">{nutrientRanges.K.low}</div>
+            <div className="text-warning">{nutrientRanges.K.medium}</div>
+            <div className="text-primary">{nutrientRanges.K.high}</div>
+          </div>
+        </div>
+
         {/* Legend */}
-        <div className="flex items-center justify-center gap-4 mt-2">
+        <div className="flex items-center justify-center gap-4 mt-3">
           <div className="flex items-center gap-1.5">
             <div className="w-3 h-3 rounded-full bg-destructive" />
             <span className="text-xs text-muted-foreground">
@@ -127,7 +156,7 @@ export function SoilAnalysisChart({ nitrogen, phosphorus, potassium, ph, languag
           <div className="flex items-center gap-1.5">
             <div className="w-3 h-3 rounded-full bg-primary" />
             <span className="text-xs text-muted-foreground">
-              {language === 'ml' ? 'ഉചിതം' : 'Optimal'}
+              {language === 'ml' ? 'ഉചിതം/ഉയർന്നത്' : 'Optimal/High'}
             </span>
           </div>
         </div>
