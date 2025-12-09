@@ -10,7 +10,7 @@ This repository contains the source code for the KrishiConnect25 web application
 
 If this project is deployed, add the public URL here. Example:
 
-https://your-project.example.com
+https://krishiconnect-murex.vercel.app/
 
 ## Local development
 
