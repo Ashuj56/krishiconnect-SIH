@@ -138,13 +138,10 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
-
-        {/* Wavy Divider */}
-        <div className="h-4 wavy-divider" />
       </header>
 
       {/* Main Content */}
-      <div className="px-4 pb-24 space-y-5 -mt-2">
+      <div className="px-4 pb-24 space-y-5 mt-4">
         {/* Weather Widget */}
         <div className="animate-slide-up">
           <WeatherWidget />
