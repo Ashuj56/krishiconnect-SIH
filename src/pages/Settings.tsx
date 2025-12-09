@@ -103,7 +103,15 @@ export default function Settings() {
     market: false,
   });
   const [units, setUnits] = useState<UnitSystem>("metric");
-  const [voiceLanguage, setVoiceLanguage] = useState<Language>(language);
+  
+  // Initialize voice language from localStorage or fall back to app language
+  const [voiceLanguage, setVoiceLanguage] = useState<Language>(() => {
+    const savedVoiceLang = localStorage.getItem("krishi-voice-language");
+    if (savedVoiceLang && ["en", "ml", "hi"].includes(savedVoiceLang)) {
+      return savedVoiceLang as Language;
+    }
+    return language;
+  });
 
   // Dialog states
   const [languageDialogOpen, setLanguageDialogOpen] = useState(false);
@@ -139,11 +147,16 @@ export default function Settings() {
       setUnits(savedUnits as UnitSystem);
     }
 
+    // Load voice language - if not set, use app language as default
     const savedVoiceLang = localStorage.getItem("krishi-voice-language");
-    if (savedVoiceLang) {
+    if (savedVoiceLang && ["en", "ml", "hi"].includes(savedVoiceLang)) {
       setVoiceLanguage(savedVoiceLang as Language);
+    } else {
+      // Set voice language to match app language if not previously set
+      setVoiceLanguage(language);
+      localStorage.setItem("krishi-voice-language", language);
     }
-  }, []);
+  }, [language]);
 
   // Save notification preferences
   const updateNotification = (key: keyof NotificationPreferences, value: boolean) => {

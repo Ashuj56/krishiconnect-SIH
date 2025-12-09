@@ -246,7 +246,9 @@ export default function Auth() {
   };
 
   const handleLanguageSelect = () => {
+    // Set both app language and voice language to selected language
     localStorage.setItem("krishi-sakhi-language", selectedLanguage);
+    localStorage.setItem("krishi-voice-language", selectedLanguage);
     if (mode === "signup") {
       setSignupStep(1);
     }
@@ -468,7 +470,9 @@ export default function Auth() {
                       key={lang.code}
                       onClick={() => {
                         setSelectedLanguage(lang.code);
+                        // Set both app language and voice language
                         localStorage.setItem("krishi-sakhi-language", lang.code);
+                        localStorage.setItem("krishi-voice-language", lang.code);
                       }}
                       className={cn(
                         "p-3 rounded-xl border-2 transition-all text-center",
