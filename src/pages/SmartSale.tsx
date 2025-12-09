@@ -5,12 +5,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Phone, Factory, Store, TrendingUp, Leaf, ArrowLeft, History } from "lucide-react";
+import { Loader2, Phone, Factory, Store, TrendingUp, Leaf, ArrowLeft, History, Ticket, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { GradeQuestionnaire } from "@/components/smartsale/GradeQuestionnaire";
+import { DigitalGradeTicket } from "@/components/smartsale/DigitalGradeTicket";
+import { Link } from "react-router-dom";
 
 const KERALA_DISTRICTS = [
   "Thiruvananthapuram", "Kollam", "Pathanamthitta", "Alappuzha", "Kottayam",
@@ -52,6 +54,8 @@ interface PastRecommendation {
   crop: string;
   quantity_kg: number;
   grade: string;
+  preliminary_grade: string | null;
+  final_grade: string | null;
   district: string;
   created_at: string;
   sale_recommendations: {
@@ -60,17 +64,33 @@ interface PastRecommendation {
   }[];
 }
 
+interface GradeTicketData {
+  id: string;
+  ticket_code: string;
+  crop: string;
+  quantity_kg: number;
+  preliminary_grade: string;
+  district: string;
+  pincode: string;
+  created_at: string;
+}
+
+type Step = "details" | "grading" | "ticket" | "recommendation";
+
 export default function SmartSale() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [crop, setCrop] = useState("");
   const [quantityKg, setQuantityKg] = useState("");
-  const [grade, setGrade] = useState("");
   const [district, setDistrict] = useState("");
   const [pincode, setPincode] = useState("");
+  const [preliminaryGrade, setPreliminaryGrade] = useState("");
+  const [gradeTicket, setGradeTicket] = useState<GradeTicketData | null>(null);
   const [recommendation, setRecommendation] = useState<SaleRecommendation | null>(null);
   const [pastRecommendations, setPastRecommendations] = useState<PastRecommendation[]>([]);
   const [activeTab, setActiveTab] = useState("log");
+  const [currentStep, setCurrentStep] = useState<Step>("details");
+  const [currentBatchId, setCurrentBatchId] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -120,6 +140,8 @@ export default function SmartSale() {
           crop,
           quantity_kg,
           grade,
+          preliminary_grade,
+          final_grade,
           district,
           created_at,
           sale_recommendations (
@@ -138,32 +160,89 @@ export default function SmartSale() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleDetailsSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!crop || !quantityKg || !grade || !district || !pincode) {
+    if (!crop || !quantityKg || !district || !pincode) {
       toast.error("Please fill all fields");
       return;
     }
 
+    setCurrentStep("grading");
+  };
+
+  const handleGradeCalculated = async (grade: string, _answers: Record<string, number>) => {
+    setPreliminaryGrade(grade);
     setLoading(true);
-    setRecommendation(null);
 
     try {
+      // Create harvest batch with preliminary grade
+      const { data: batch, error: batchError } = await supabase
+        .from("harvest_batches")
+        .insert({
+          farmer_id: user?.id,
+          crop,
+          quantity_kg: parseFloat(quantityKg),
+          grade, // Keep for backward compatibility
+          preliminary_grade: grade,
+          district,
+          pincode,
+        })
+        .select()
+        .single();
+
+      if (batchError) throw batchError;
+
+      setCurrentBatchId(batch.id);
+
+      // Generate grade ticket
+      const { data: ticketData, error: ticketError } = await supabase.functions.invoke("grade-ticket", {
+        body: { action: "create", harvest_batch_id: batch.id }
+      });
+
+      if (ticketError || ticketData.error) throw new Error(ticketData?.error || "Failed to create ticket");
+
+      setGradeTicket(ticketData.ticket);
+      setCurrentStep("ticket");
+      toast.success("Grade ticket generated!");
+    } catch (error) {
+      console.error("Error creating batch:", error);
+      toast.error("Failed to create harvest batch");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleContinueToRecommendation = async () => {
+    if (!currentBatchId) return;
+    setLoading(true);
+
+    try {
+      // Fetch the latest batch data to get final_grade if it exists
+      const { data: batch } = await supabase
+        .from("harvest_batches")
+        .select("final_grade, preliminary_grade")
+        .eq("id", currentBatchId)
+        .single();
+
+      const gradeToUse = batch?.final_grade || batch?.preliminary_grade || preliminaryGrade;
+
       const { data, error } = await supabase.functions.invoke("sale-route-recommend", {
         body: {
           farmer_id: user?.id,
           crop,
           quantity_kg: parseFloat(quantityKg),
-          grade,
+          grade: gradeToUse,
           district,
-          pincode
+          pincode,
+          harvest_batch_id: currentBatchId
         }
       });
 
       if (error) throw error;
 
       setRecommendation(data);
+      setCurrentStep("recommendation");
       fetchPastRecommendations();
       toast.success("Recommendation generated!");
     } catch (error) {
@@ -176,10 +255,13 @@ export default function SmartSale() {
 
   const handleReset = () => {
     setRecommendation(null);
+    setGradeTicket(null);
+    setPreliminaryGrade("");
+    setCurrentBatchId(null);
     setCrop("");
     setQuantityKg("");
-    setGrade("");
     setPincode("");
+    setCurrentStep("details");
   };
 
   const getChannelBadgeColor = (channel: string) => {
@@ -208,16 +290,30 @@ export default function SmartSale() {
     }
   };
 
+  const getEffectiveGrade = (rec: PastRecommendation) => {
+    return rec.final_grade || rec.preliminary_grade || rec.grade;
+  };
+
   return (
     <div className="container max-w-2xl mx-auto px-4 py-6 pb-24">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-          <TrendingUp className="h-6 w-6 text-primary" />
-          Smart Sale Route
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          Find the best buyer for your harvest
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+              <TrendingUp className="h-6 w-6 text-primary" />
+              Smart Sale Route
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              Find the best buyer for your harvest
+            </p>
+          </div>
+          <Link to="/verify-grade">
+            <Button variant="outline" size="sm">
+              <Ticket className="h-4 w-4 mr-2" />
+              Verify Grade
+            </Button>
+          </Link>
+        </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -233,13 +329,134 @@ export default function SmartSale() {
         </TabsList>
 
         <TabsContent value="log">
-          {recommendation ? (
+          {currentStep === "details" && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Log Your Harvest</CardTitle>
+                <CardDescription>
+                  Enter your harvest details, then answer quality questions
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleDetailsSubmit} className="space-y-5">
+                  <div className="space-y-2">
+                    <Label htmlFor="crop">Crop</Label>
+                    <Select value={crop} onValueChange={setCrop}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select crop" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CROPS.map((c) => (
+                          <SelectItem key={c} value={c}>
+                            {c}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="quantity">Quantity (kg)</Label>
+                    <Input
+                      id="quantity"
+                      type="number"
+                      placeholder="Enter quantity in kg"
+                      value={quantityKg}
+                      onChange={(e) => setQuantityKg(e.target.value)}
+                      min="1"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="district">District</Label>
+                      <Select value={district} onValueChange={setDistrict}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select district" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {KERALA_DISTRICTS.map((d) => (
+                            <SelectItem key={d} value={d}>
+                              {d}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="pincode">Pincode</Label>
+                      <Input
+                        id="pincode"
+                        type="text"
+                        placeholder="6-digit pincode"
+                        value={pincode}
+                        onChange={(e) => setPincode(e.target.value)}
+                        maxLength={6}
+                        pattern="[0-9]{6}"
+                      />
+                    </div>
+                  </div>
+
+                  <Button type="submit" className="w-full">
+                    Continue to Quality Assessment
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          )}
+
+          {currentStep === "grading" && (
+            <div className="space-y-4">
+              <Button variant="ghost" onClick={() => setCurrentStep("details")}>
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Details
+              </Button>
+
+              <Card className="mb-4">
+                <CardContent className="pt-4">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Crop: <span className="font-medium text-foreground">{crop}</span></span>
+                    <span className="text-muted-foreground">Qty: <span className="font-medium text-foreground">{quantityKg} kg</span></span>
+                    <span className="text-muted-foreground">District: <span className="font-medium text-foreground">{district}</span></span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <GradeQuestionnaire onGradeCalculated={handleGradeCalculated} />
+
+              {loading && (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  <span className="ml-2">Creating grade ticket...</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {currentStep === "ticket" && gradeTicket && (
+            <div className="space-y-4">
+              <Button variant="ghost" onClick={handleReset}>
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                New Harvest
+              </Button>
+
+              <DigitalGradeTicket 
+                ticket={gradeTicket} 
+                onClose={handleContinueToRecommendation}
+              />
+
+              {loading && (
+                <div className="flex items-center justify-center py-4">
+                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                  <span className="ml-2">Getting recommendations...</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {currentStep === "recommendation" && recommendation && (
             <div className="space-y-4 animate-in fade-in">
-              <Button
-                variant="ghost"
-                onClick={handleReset}
-                className="mb-2"
-              >
+              <Button variant="ghost" onClick={handleReset} className="mb-2">
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 New Harvest
               </Button>
@@ -249,9 +466,16 @@ export default function SmartSale() {
                 <CardHeader className="pb-3">
                   <CardTitle className="text-lg flex items-center justify-between">
                     <span>{recommendation.crop}</span>
-                    <Badge variant="outline" className="text-sm">
-                      Grade {recommendation.grade}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="text-sm">
+                        Grade {recommendation.grade}
+                      </Badge>
+                      {gradeTicket && (
+                        <Badge variant="secondary" className="text-xs font-mono">
+                          {gradeTicket.ticket_code}
+                        </Badge>
+                      )}
+                    </div>
                   </CardTitle>
                   <CardDescription>
                     {recommendation.quantity_kg} kg • {recommendation.district}
@@ -364,126 +588,6 @@ export default function SmartSale() {
                 </Card>
               )}
             </div>
-          ) : (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Log Your Harvest</CardTitle>
-                <CardDescription>
-                  Enter your harvest details to get the best selling recommendation
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-5">
-                  <div className="space-y-2">
-                    <Label htmlFor="crop">Crop</Label>
-                    <Select value={crop} onValueChange={setCrop}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select crop" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {CROPS.map((c) => (
-                          <SelectItem key={c} value={c}>
-                            {c}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="quantity">Quantity (kg)</Label>
-                    <Input
-                      id="quantity"
-                      type="number"
-                      placeholder="Enter quantity in kg"
-                      value={quantityKg}
-                      onChange={(e) => setQuantityKg(e.target.value)}
-                      min="1"
-                    />
-                  </div>
-
-                  <div className="space-y-3">
-                    <Label>Grade</Label>
-                    <RadioGroup value={grade} onValueChange={setGrade} className="space-y-2">
-                      <div className="flex items-start space-x-3 p-3 rounded-lg border hover:bg-muted/50 cursor-pointer">
-                        <RadioGroupItem value="A" id="gradeA" className="mt-0.5" />
-                        <div>
-                          <Label htmlFor="gradeA" className="font-medium cursor-pointer">
-                            Grade A - Good Quality
-                          </Label>
-                          <p className="text-sm text-muted-foreground">
-                            Clean, uniform, no major damage
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-start space-x-3 p-3 rounded-lg border hover:bg-muted/50 cursor-pointer">
-                        <RadioGroupItem value="B" id="gradeB" className="mt-0.5" />
-                        <div>
-                          <Label htmlFor="gradeB" className="font-medium cursor-pointer">
-                            Grade B - Medium Quality
-                          </Label>
-                          <p className="text-sm text-muted-foreground">
-                            Minor defects, acceptable condition
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-start space-x-3 p-3 rounded-lg border hover:bg-muted/50 cursor-pointer">
-                        <RadioGroupItem value="C" id="gradeC" className="mt-0.5" />
-                        <div>
-                          <Label htmlFor="gradeC" className="font-medium cursor-pointer">
-                            Grade C - Low Quality
-                          </Label>
-                          <p className="text-sm text-muted-foreground">
-                            Damaged, overripe, or uneven
-                          </p>
-                        </div>
-                      </div>
-                    </RadioGroup>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="district">District</Label>
-                      <Select value={district} onValueChange={setDistrict}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select district" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {KERALA_DISTRICTS.map((d) => (
-                            <SelectItem key={d} value={d}>
-                              {d}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="pincode">Pincode</Label>
-                      <Input
-                        id="pincode"
-                        type="text"
-                        placeholder="6-digit pincode"
-                        value={pincode}
-                        onChange={(e) => setPincode(e.target.value)}
-                        maxLength={6}
-                        pattern="[0-9]{6}"
-                      />
-                    </div>
-                  </div>
-
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Finding Best Option...
-                      </>
-                    ) : (
-                      "Get Best Selling Option"
-                    )}
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
           )}
         </TabsContent>
 
@@ -511,8 +615,13 @@ export default function SmartSale() {
                         <div className="flex items-center gap-2">
                           <span className="font-medium">{rec.crop}</span>
                           <Badge variant="outline" className="text-xs">
-                            Grade {rec.grade}
+                            Grade {getEffectiveGrade(rec)}
                           </Badge>
+                          {rec.final_grade && (
+                            <Badge variant="secondary" className="text-xs">
+                              Verified
+                            </Badge>
+                          )}
                         </div>
                         <p className="text-sm text-muted-foreground">
                           {rec.quantity_kg} kg • {rec.district}
