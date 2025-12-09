@@ -9,7 +9,7 @@ import {
   FileText,
   Settings,
   Sun,
-  Bug,
+  Store,
   Banknote
 } from "lucide-react";
 import krishiConnectLogo from "@/assets/krishi-connect-logo.jpg";
@@ -29,7 +29,7 @@ const mainNavItems = [
 const secondaryNavItems = [
   { icon: Sun, label: "Advisory", path: "/advisory" },
   { icon: TrendingUp, label: "Market Prices", path: "/market" },
-  { icon: Bug, label: "Agri Distributors", path: "/pesticides" },
+  { icon: Store, label: "Agri Distributors", path: "/pesticides" },
   { icon: Banknote, label: "Microfinance", path: "/microfinance" },
   { icon: FileText, label: "Schemes", path: "/schemes" },
   { icon: BookOpen, label: "Knowledge Base", path: "/knowledge" },

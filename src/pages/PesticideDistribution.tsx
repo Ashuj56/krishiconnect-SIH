@@ -2,20 +2,19 @@ import React, { useState, useMemo } from 'react';
 import { 
   Search, 
   MapPin, 
-  ChevronDown, 
   Phone, 
   FileText,
   X,
   ShieldCheck,
   Building2,
   User,
-  Calendar
+  Calendar,
+  Package
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import {
   Select,
   SelectContent,
@@ -26,68 +25,81 @@ import {
 import {
   searchDealers,
   getDistrictNames,
+  productTypes,
   DealerWithDistrict
 } from '@/data/agriDistributorsData';
 
 const PesticideDistribution = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDistrict, setSelectedDistrict] = useState<string>("all");
+  const [selectedProduct, setSelectedProduct] = useState<string>("all");
 
   const districts = useMemo(() => getDistrictNames(), []);
 
-  // Filter dealers based on search and district
+  // Filter dealers based on search, district and product
   const filteredDealers = useMemo(() => {
-    return searchDealers(searchQuery, selectedDistrict);
-  }, [searchQuery, selectedDistrict]);
+    return searchDealers(searchQuery, selectedDistrict, selectedProduct);
+  }, [searchQuery, selectedDistrict, selectedProduct]);
 
   const clearFilters = () => {
     setSearchQuery("");
     setSelectedDistrict("all");
+    setSelectedProduct("all");
   };
 
-  const hasActiveFilters = searchQuery || selectedDistrict !== "all";
+  const hasActiveFilters = searchQuery || selectedDistrict !== "all" || selectedProduct !== "all";
 
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Top Header Bar */}
       <div className="sticky top-0 z-50 bg-card border-b border-border shadow-sm">
         <div className="container max-w-6xl mx-auto px-4 py-3">
-          {/* Location & Search Row */}
-          <div className="flex items-center gap-3">
+          {/* Filters Row */}
+          <div className="flex flex-wrap items-center gap-3">
             {/* District Selector */}
             <Select value={selectedDistrict} onValueChange={setSelectedDistrict}>
-              <SelectTrigger className="w-auto min-w-[160px] border-0 bg-transparent hover:bg-muted">
+              <SelectTrigger className="w-auto min-w-[140px] border-0 bg-muted/50 hover:bg-muted">
                 <div className="flex items-center gap-2">
                   <MapPin className="h-4 w-4 text-primary" />
                   <SelectValue placeholder="All Districts" />
                 </div>
               </SelectTrigger>
               <SelectContent className="bg-popover">
-                <SelectItem value="all">
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-3 w-3 text-muted-foreground" />
-                    All Districts
-                  </div>
-                </SelectItem>
+                <SelectItem value="all">All Districts</SelectItem>
                 {districts.map(district => (
                   <SelectItem key={district} value={district}>
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-3 w-3 text-muted-foreground" />
-                      {district}
-                    </div>
+                    {district}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* Product Filter */}
+            <Select value={selectedProduct} onValueChange={setSelectedProduct}>
+              <SelectTrigger className="w-auto min-w-[140px] border-0 bg-muted/50 hover:bg-muted">
+                <div className="flex items-center gap-2">
+                  <Package className="h-4 w-4 text-primary" />
+                  <SelectValue placeholder="All Products" />
+                </div>
+              </SelectTrigger>
+              <SelectContent className="bg-popover">
+                <SelectItem value="all">All Products</SelectItem>
+                {productTypes.map(product => (
+                  <SelectItem key={product} value={product}>
+                    {product}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
 
             {/* Search Bar */}
-            <div className="flex-1 relative">
+            <div className="flex-1 min-w-[200px] relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search distributors, owners or address..."
-                className="pl-10 h-10 bg-muted border-0 focus-visible:ring-1"
+                placeholder="Search distributors..."
+                className="pl-10 h-10 bg-muted/50 border-0 focus-visible:ring-1"
               />
             </div>
 
@@ -117,6 +129,7 @@ const PesticideDistribution = () => {
           <p className="text-muted-foreground mt-1">
             {filteredDealers.length} licensed distributors found
             {selectedDistrict !== "all" && ` in ${selectedDistrict}`}
+            {selectedProduct !== "all" && ` with ${selectedProduct}`}
           </p>
         </div>
 
@@ -162,12 +175,10 @@ const DealerCard: React.FC<DealerCardProps> = ({ dealer }) => {
         <Badge className="absolute top-2 left-2 bg-primary/90 text-primary-foreground text-xs">
           {dealer.district}
         </Badge>
-        {dealer.license_number && (
-          <Badge className="absolute top-2 right-2 bg-success/90 text-white text-xs flex items-center gap-1">
-            <ShieldCheck className="h-3 w-3" />
-            Licensed
-          </Badge>
-        )}
+        <Badge className="absolute top-2 right-2 bg-success/90 text-white text-xs flex items-center gap-1">
+          <ShieldCheck className="h-3 w-3" />
+          Licensed
+        </Badge>
       </div>
 
       <CardContent className="p-4">
@@ -192,13 +203,25 @@ const DealerCard: React.FC<DealerCardProps> = ({ dealer }) => {
           </div>
         )}
 
+        {/* Products */}
+        <div className="flex flex-wrap gap-1 mb-3">
+          {dealer.products.slice(0, 3).map((product) => (
+            <Badge key={product} variant="secondary" className="text-xs">
+              {product}
+            </Badge>
+          ))}
+          {dealer.products.length > 3 && (
+            <Badge variant="outline" className="text-xs">
+              +{dealer.products.length - 3} more
+            </Badge>
+          )}
+        </div>
+
         {/* License Info */}
-        {dealer.license_number && (
-          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
-            <FileText className="h-3 w-3 shrink-0" />
-            <span className="truncate">{dealer.license_number}</span>
-          </div>
-        )}
+        <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+          <FileText className="h-3 w-3 shrink-0" />
+          <span className="truncate">{dealer.license_number}</span>
+        </div>
 
         {/* Validity */}
         {dealer.validity && (
@@ -210,10 +233,7 @@ const DealerCard: React.FC<DealerCardProps> = ({ dealer }) => {
 
         {/* Contact Button */}
         {dealer.phone && (
-          <a 
-            href={`tel:${dealer.phone}`}
-            className="w-full"
-          >
+          <a href={`tel:${dealer.phone}`} className="w-full">
             <Button variant="outline" size="sm" className="w-full gap-2">
               <Phone className="h-4 w-4" />
               {dealer.phone}
