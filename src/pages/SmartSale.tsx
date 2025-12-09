@@ -18,7 +18,11 @@ const KERALA_DISTRICTS = [
   "Kozhikode", "Wayanad", "Kannur", "Kasaragod"
 ];
 
-const CROPS = ["Banana", "Coconut"];
+const CROPS = [
+  "Banana", "Coconut", "Pepper", "Cardamom", "Rubber", "Paddy", "Tapioca", 
+  "Ginger", "Turmeric", "Arecanut", "Cashew", "Coffee", "Tea", "Jackfruit", 
+  "Mango", "Pineapple", "Nutmeg", "Clove", "Vanilla"
+];
 
 interface BuyerOption {
   buyer_name: string;
