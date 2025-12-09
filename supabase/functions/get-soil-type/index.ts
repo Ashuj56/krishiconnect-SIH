@@ -5,6 +5,67 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Soil properties database with NPK/pH values based on soil type
+const soilPropertiesDB: Record<string, {
+  ph: number | string;
+  phRange?: string;
+  organicCarbon: number | string;
+  nValue?: number;
+  pValue?: number;
+  kValue?: number;
+  nStatus: "Low" | "Medium" | "High";
+  pStatus: "Low" | "Medium" | "High";
+  kStatus: "Low" | "Medium" | "High";
+  texture?: string;
+}> = {
+  // Kerala soil types
+  "Laterite soil": { ph: 5.5, phRange: "5.0-6.0", organicCarbon: 1.2, nValue: 220, pValue: 8, kValue: 95, nStatus: "Low", pStatus: "Low", kStatus: "Low", texture: "Sandy clay loam" },
+  "Sandy loam": { ph: 6.2, phRange: "5.8-6.5", organicCarbon: 0.8, nValue: 180, pValue: 12, kValue: 120, nStatus: "Low", pStatus: "Medium", kStatus: "Medium", texture: "Sandy loam" },
+  "Sandy soil": { ph: 6.0, phRange: "5.5-6.5", organicCarbon: 0.5, nValue: 150, pValue: 6, kValue: 80, nStatus: "Low", pStatus: "Low", kStatus: "Low", texture: "Sandy" },
+  "Clay soil": { ph: 6.8, phRange: "6.5-7.2", organicCarbon: 1.5, nValue: 320, pValue: 18, kValue: 200, nStatus: "Medium", pStatus: "Medium", kStatus: "Medium", texture: "Clay" },
+  "Alluvial soil": { ph: 7.0, phRange: "6.5-7.5", organicCarbon: 1.8, nValue: 380, pValue: 22, kValue: 250, nStatus: "Medium", pStatus: "Medium", kStatus: "Medium", texture: "Loamy" },
+  "Loamy soil": { ph: 6.5, phRange: "6.0-7.0", organicCarbon: 1.4, nValue: 300, pValue: 16, kValue: 180, nStatus: "Medium", pStatus: "Medium", kStatus: "Medium", texture: "Loam" },
+  "Clayey soil": { ph: 7.0, phRange: "6.5-7.5", organicCarbon: 1.6, nValue: 340, pValue: 20, kValue: 220, nStatus: "Medium", pStatus: "Medium", kStatus: "Medium", texture: "Clay" },
+  "Fairly rich brown loam of laterite": { ph: 5.8, phRange: "5.5-6.2", organicCarbon: 1.3, nValue: 280, pValue: 14, kValue: 150, nStatus: "Medium", pStatus: "Medium", kStatus: "Medium", texture: "Loamy" },
+  "Rich dark brown loam (granite origin)": { ph: 6.0, phRange: "5.5-6.5", organicCarbon: 1.6, nValue: 350, pValue: 18, kValue: 190, nStatus: "Medium", pStatus: "Medium", kStatus: "Medium", texture: "Loamy" },
+  "Clay loam with high acidity": { ph: 5.2, phRange: "4.8-5.5", organicCarbon: 1.4, nValue: 260, pValue: 10, kValue: 130, nStatus: "Low", pStatus: "Low", kStatus: "Medium", texture: "Clay loam" },
+  "Laterite soil (upper regions)": { ph: 5.3, phRange: "5.0-5.8", organicCarbon: 1.1, nValue: 200, pValue: 7, kValue: 85, nStatus: "Low", pStatus: "Low", kStatus: "Low", texture: "Sandy clay" },
+  
+  // Other India soil types
+  "Black cotton soil": { ph: 7.8, phRange: "7.5-8.5", organicCarbon: 0.6, nValue: 180, pValue: 12, kValue: 320, nStatus: "Low", pStatus: "Medium", kStatus: "High", texture: "Heavy clay" },
+  "Medium black soil": { ph: 7.5, phRange: "7.0-8.0", organicCarbon: 0.8, nValue: 220, pValue: 15, kValue: 280, nStatus: "Low", pStatus: "Medium", kStatus: "Medium", texture: "Clay" },
+  "Shallow black soil": { ph: 7.3, phRange: "7.0-7.8", organicCarbon: 0.5, nValue: 160, pValue: 10, kValue: 240, nStatus: "Low", pStatus: "Low", kStatus: "Medium", texture: "Clay loam" },
+  "Black soil": { ph: 7.6, phRange: "7.2-8.2", organicCarbon: 0.7, nValue: 200, pValue: 14, kValue: 300, nStatus: "Low", pStatus: "Medium", kStatus: "High", texture: "Heavy clay" },
+  "Red soil": { ph: 6.2, phRange: "5.5-7.0", organicCarbon: 0.4, nValue: 140, pValue: 8, kValue: 110, nStatus: "Low", pStatus: "Low", kStatus: "Medium", texture: "Sandy loam" },
+  "Red loamy soil": { ph: 6.0, phRange: "5.5-6.8", organicCarbon: 0.6, nValue: 180, pValue: 10, kValue: 140, nStatus: "Low", pStatus: "Low", kStatus: "Medium", texture: "Loamy" },
+  "Red sandy soil": { ph: 5.8, phRange: "5.2-6.5", organicCarbon: 0.3, nValue: 120, pValue: 5, kValue: 90, nStatus: "Low", pStatus: "Low", kStatus: "Low", texture: "Sandy" },
+  "Red and yellow soil": { ph: 5.5, phRange: "5.0-6.2", organicCarbon: 0.5, nValue: 160, pValue: 7, kValue: 100, nStatus: "Low", pStatus: "Low", kStatus: "Low", texture: "Sandy clay loam" },
+  "Coastal alluvial soil": { ph: 7.2, phRange: "6.8-7.8", organicCarbon: 1.0, nValue: 280, pValue: 18, kValue: 200, nStatus: "Medium", pStatus: "Medium", kStatus: "Medium", texture: "Silty loam" },
+  "Gangetic alluvial soil": { ph: 7.5, phRange: "7.0-8.0", organicCarbon: 0.9, nValue: 300, pValue: 20, kValue: 220, nStatus: "Medium", pStatus: "Medium", kStatus: "Medium", texture: "Silty clay loam" },
+  "Deltaic soil": { ph: 7.0, phRange: "6.5-7.5", organicCarbon: 1.2, nValue: 320, pValue: 22, kValue: 240, nStatus: "Medium", pStatus: "Medium", kStatus: "Medium", texture: "Silty clay" },
+  "Gangetic alluvium": { ph: 7.4, phRange: "7.0-7.8", organicCarbon: 0.8, nValue: 280, pValue: 18, kValue: 210, nStatus: "Medium", pStatus: "Medium", kStatus: "Medium", texture: "Loamy" },
+  "Desert sandy soil": { ph: 8.2, phRange: "7.8-8.8", organicCarbon: 0.2, nValue: 80, pValue: 4, kValue: 150, nStatus: "Low", pStatus: "Low", kStatus: "Medium", texture: "Sandy" },
+  "Arid soil": { ph: 8.5, phRange: "8.0-9.0", organicCarbon: 0.15, nValue: 60, pValue: 3, kValue: 180, nStatus: "Low", pStatus: "Low", kStatus: "Medium", texture: "Sandy" },
+  "Mountain soil": { ph: 5.5, phRange: "5.0-6.5", organicCarbon: 2.5, nValue: 400, pValue: 12, kValue: 160, nStatus: "Medium", pStatus: "Medium", kStatus: "Medium", texture: "Loamy" },
+  "Brown hill soil": { ph: 5.8, phRange: "5.2-6.5", organicCarbon: 2.2, nValue: 380, pValue: 10, kValue: 140, nStatus: "Medium", pStatus: "Low", kStatus: "Medium", texture: "Sandy loam" },
+  "Forest soil": { ph: 5.2, phRange: "4.5-6.0", organicCarbon: 3.0, nValue: 450, pValue: 8, kValue: 120, nStatus: "High", pStatus: "Low", kStatus: "Medium", texture: "Loamy" },
+  "Terai soil": { ph: 6.5, phRange: "6.0-7.0", organicCarbon: 1.8, nValue: 350, pValue: 16, kValue: 180, nStatus: "Medium", pStatus: "Medium", kStatus: "Medium", texture: "Silty loam" },
+  "Piedmont soil": { ph: 6.8, phRange: "6.2-7.2", organicCarbon: 1.4, nValue: 300, pValue: 14, kValue: 160, nStatus: "Medium", pStatus: "Medium", kStatus: "Medium", texture: "Loamy" },
+  "Calcareous soil": { ph: 8.0, phRange: "7.5-8.5", organicCarbon: 0.6, nValue: 180, pValue: 8, kValue: 200, nStatus: "Low", pStatus: "Low", kStatus: "Medium", texture: "Clay loam" },
+  "Clay loam": { ph: 6.8, phRange: "6.5-7.2", organicCarbon: 1.3, nValue: 300, pValue: 16, kValue: 200, nStatus: "Medium", pStatus: "Medium", kStatus: "Medium", texture: "Clay loam" },
+};
+
+// Default soil properties for unknown soil types
+const defaultSoilProperties = {
+  ph: 6.5,
+  phRange: "6.0-7.0",
+  organicCarbon: 1.0,
+  nStatus: "Medium" as const,
+  pStatus: "Medium" as const,
+  kStatus: "Medium" as const,
+  texture: "Loamy"
+};
+
 // India-wide soil GeoJSON data (embedded for edge function)
 const indiaSoilGeoJSON = {
   "type": "FeatureCollection",
@@ -77,7 +138,6 @@ function isPointInPolygon(lat: number, lng: number, polygon: number[][]): boolea
     const xi = polygon[i][0], yi = polygon[i][1];
     const xj = polygon[j][0], yj = polygon[j][1];
     
-    // Check if point is on the boundary
     if ((yi > lat) !== (yj > lat) &&
         lng < (xj - xi) * (lat - yi) / (yj - yi) + xi) {
       inside = !inside;
@@ -87,14 +147,33 @@ function isPointInPolygon(lat: number, lng: number, polygon: number[][]): boolea
   return inside;
 }
 
-// Find soil type using polygon-based lookup
-function findSoilType(lat: number, lng: number): { 
-  state: string; 
-  district: string; 
-  soil_type: string; 
-  soil_types: string[] 
+// Get soil properties from database
+function getSoilProperties(soilType: string) {
+  return soilPropertiesDB[soilType] || defaultSoilProperties;
+}
+
+// Find soil type and properties using polygon-based lookup
+function findSoilData(lat: number, lng: number): {
+  success: boolean;
+  state?: string;
+  district?: string;
+  soilType?: string;
+  soilTypes?: string[];
+  texture?: string;
+  ph?: number | string;
+  phRange?: string;
+  organicCarbon?: number | string;
+  nValue?: number;
+  pValue?: number;
+  kValue?: number;
+  nStatus?: "Low" | "Medium" | "High";
+  pStatus?: "Low" | "Medium" | "High";
+  kStatus?: "Low" | "Medium" | "High";
+  confidence?: string;
+  latitude?: number;
+  longitude?: number;
 } | null {
-  console.log(`Searching for soil type at lat=${lat}, lng=${lng}`);
+  console.log(`Searching for soil data at lat=${lat}, lng=${lng}`);
   
   // Check India bounds (approximate)
   if (lat < 6.0 || lat > 37.0 || lng < 68.0 || lng > 97.5) {
@@ -107,11 +186,28 @@ function findSoilType(lat: number, lng: number): {
     const polygon = feature.geometry.coordinates[0];
     if (isPointInPolygon(lat, lng, polygon)) {
       console.log(`Found match in ${feature.properties.state}, ${feature.properties.district}`);
+      
+      const soilProps = getSoilProperties(feature.properties.soil_type);
+      
       return {
+        success: true,
         state: feature.properties.state,
         district: feature.properties.district,
-        soil_type: feature.properties.soil_type,
-        soil_types: feature.properties.soil_types
+        soilType: feature.properties.soil_type,
+        soilTypes: feature.properties.soil_types,
+        texture: soilProps.texture,
+        ph: soilProps.ph,
+        phRange: soilProps.phRange,
+        organicCarbon: soilProps.organicCarbon,
+        nValue: soilProps.nValue,
+        pValue: soilProps.pValue,
+        kValue: soilProps.kValue,
+        nStatus: soilProps.nStatus,
+        pStatus: soilProps.pStatus,
+        kStatus: soilProps.kStatus,
+        confidence: "High",
+        latitude: lat,
+        longitude: lng
       };
     }
   }
@@ -122,7 +218,6 @@ function findSoilType(lat: number, lng: number): {
 
   for (const feature of indiaSoilGeoJSON.features) {
     const polygon = feature.geometry.coordinates[0];
-    // Calculate center of polygon
     let centerLng = 0, centerLat = 0;
     for (const coord of polygon) {
       centerLng += coord[0];
@@ -142,11 +237,28 @@ function findSoilType(lat: number, lng: number): {
   // Return nearest if within reasonable distance (0.5 degrees ~ 55km)
   if (nearestFeature && minDistance < 0.5) {
     console.log(`Using nearest district: ${nearestFeature.properties.district} (distance: ${minDistance.toFixed(3)})`);
+    
+    const soilProps = getSoilProperties(nearestFeature.properties.soil_type);
+    
     return {
+      success: true,
       state: nearestFeature.properties.state,
       district: nearestFeature.properties.district,
-      soil_type: nearestFeature.properties.soil_type,
-      soil_types: nearestFeature.properties.soil_types
+      soilType: nearestFeature.properties.soil_type,
+      soilTypes: nearestFeature.properties.soil_types,
+      texture: soilProps.texture,
+      ph: soilProps.ph,
+      phRange: soilProps.phRange,
+      organicCarbon: soilProps.organicCarbon,
+      nValue: soilProps.nValue,
+      pValue: soilProps.pValue,
+      kValue: soilProps.kValue,
+      nStatus: soilProps.nStatus,
+      pStatus: soilProps.pStatus,
+      kStatus: soilProps.kStatus,
+      confidence: "Medium",
+      latitude: lat,
+      longitude: lng
     };
   }
 
@@ -172,31 +284,21 @@ serve(async (req) => {
       );
     }
 
-    const result = findSoilType(latitude, longitude);
+    const result = findSoilData(latitude, longitude);
 
     if (!result) {
       return new Response(
         JSON.stringify({ 
           success: false,
           error: "Location not covered in soil database",
-          message: "Soil type not found for this location. Please recheck."
+          message: "Soil type not found for this location. Please recheck location accuracy."
         }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     return new Response(
-      JSON.stringify({
-        success: true,
-        state: result.state,
-        district: result.district,
-        soil_type: result.soil_type,
-        soil_types: result.soil_types,
-        location: {
-          latitude,
-          longitude
-        }
-      }),
+      JSON.stringify(result),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
 
