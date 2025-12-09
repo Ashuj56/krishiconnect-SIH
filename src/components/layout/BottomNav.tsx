@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { LayoutDashboard, Bot, ScanLine, CalendarCheck, Lightbulb, IndianRupee, ScrollText, GraduationCap, Wheat, CircleUser, SlidersHorizontal, ChevronLeft, ChevronRight } from "lucide-react";
+import { LayoutDashboard, Bot, ScanLine, CalendarCheck, Lightbulb, IndianRupee, ScrollText, GraduationCap, Wheat, CircleUser, SlidersHorizontal, TrendingUp } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -18,6 +18,7 @@ export function BottomNav() {
     { icon: CalendarCheck, labelKey: "activities", path: "/activities", color: "text-orange-500" },
     { icon: Lightbulb, labelKey: "advisory", path: "/advisory", color: "text-amber-500" },
     { icon: IndianRupee, labelKey: "marketPrices", path: "/market", color: "text-green-600" },
+    { icon: TrendingUp, labelKey: "smartSale", path: "/smart-sale", color: "text-teal-500" },
     { icon: ScrollText, labelKey: "schemes", path: "/schemes", color: "text-blue-500" },
     { icon: GraduationCap, labelKey: "knowledge", path: "/knowledge", color: "text-purple-500" },
     { icon: Wheat, labelKey: "farm", path: "/farm", color: "text-yellow-600" },

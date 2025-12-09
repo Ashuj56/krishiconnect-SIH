@@ -29,6 +29,7 @@ export const translations: Translations = {
   knowledge: { en: "Knowledge Base", ml: "അറിവ്", hi: "ज्ञान" },
   settings: { en: "Settings", ml: "ക്രമീകരണങ്ങൾ", hi: "सेटिंग्स" },
   farm: { en: "My Farm", ml: "എന്റെ കൃഷിയിടം", hi: "मेरा खेत" },
+  smartSale: { en: "Smart Sale", ml: "സ്മാർട്ട് സെയിൽ", hi: "स्मार्ट सेल" },
   
   // Auth
   welcomeBack: { en: "Welcome Back", ml: "സ്വാഗതം", hi: "वापसी पर स्वागत" },
