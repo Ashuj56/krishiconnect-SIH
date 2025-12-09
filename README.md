@@ -1,56 +1,51 @@
-# Welcome to your Lovable project
+# KrishiConnect25
 
-## Project info
+A concise description of the project goes here — what the app does and who it's for.
 
-**URL**: https://lovable.dev/projects/7178a3dd-65d5-4e06-bf02-561937c4d81f
+## Project overview
 
-## How can I edit this code?
+This repository contains the source code for the KrishiConnect25 web application. Keep this file updated with high-level information about the project, how to set it up, and how to contribute.
 
-There are several ways of editing your application.
+## Live URL
 
-**Use Lovable**
+If this project is deployed, add the public URL here. Example:
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/7178a3dd-65d5-4e06-bf02-561937c4d81f) and start prompting.
+https://your-project.example.com
 
-Changes made via Lovable will be committed automatically to this repo.
+## Local development
 
-**Use your preferred IDE**
+Requirements:
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+- Node.js (LTS) and npm
+- Git
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+Setup and run locally:
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
+# Clone the repository
 git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
 cd <YOUR_PROJECT_NAME>
 
-# Step 3: Install the necessary dependencies.
-npm i
+# Install dependencies
+npm install
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Start the development server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+The development server typically provides hot-reloading for faster iteration. Adjust the commands above if your project uses a different package manager or scripts.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Editing the code
 
-**Use GitHub Codespaces**
+You can edit the code using any of the following methods:
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+- Use your preferred IDE (VS Code, JetBrains, etc.) — clone the repo and work locally.
+- Edit files directly on GitHub via the web editor for small changes.
+- Use GitHub Codespaces if available for a cloud development environment.
 
-## What technologies are used for this project?
+When making changes locally, commit and push them to the repository. Follow the repository's branching and pull request conventions if contributing.
+
+## Technologies
 
 This project is built with:
 
@@ -60,14 +55,23 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
-## How can I deploy this project?
+Update this list if technologies change.
 
-Simply open [Lovable](https://lovable.dev/projects/7178a3dd-65d5-4e06-bf02-561937c4d81f) and click on Share -> Publish.
+## Deployment
 
-## Can I connect a custom domain to my Lovable project?
+Provide deployment instructions specific to your hosting provider. Example steps:
 
-Yes, you can!
+- Build the production bundle: `npm run build`
+- Deploy the generated output to your hosting provider (Netlify, Vercel, GitHub Pages, a VPS, etc.)
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## Custom domain
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+If you use a custom domain, configure DNS records according to your hosting provider's instructions and add the domain in the provider's dashboard.
+
+## Contributing
+
+Please open issues and pull requests to propose changes. Describe the problem or feature, include steps to reproduce, and provide tests or screenshots when applicable.
+
+## License
+
+State the project license here (MIT, Apache-2.0, etc.) or add a LICENSE file to the repository.
