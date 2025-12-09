@@ -1,7 +1,7 @@
 project_id = "pimmztrboudsdyxdqiav"
 
 [functions.microfinance-eligibility]
-verify_jwt = true
+verify_jwt = false
 
 [functions.government-schemes]
 verify_jwt = false
