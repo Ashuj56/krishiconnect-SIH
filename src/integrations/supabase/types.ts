@@ -354,16 +354,62 @@ export type Database = {
         }
         Relationships: []
       }
+      grade_tickets: {
+        Row: {
+          created_at: string
+          crop: string
+          district: string
+          harvest_batch_id: string
+          id: string
+          pincode: string
+          preliminary_grade: string
+          quantity_kg: number
+          ticket_code: string
+        }
+        Insert: {
+          created_at?: string
+          crop: string
+          district: string
+          harvest_batch_id: string
+          id?: string
+          pincode: string
+          preliminary_grade: string
+          quantity_kg: number
+          ticket_code: string
+        }
+        Update: {
+          created_at?: string
+          crop?: string
+          district?: string
+          harvest_batch_id?: string
+          id?: string
+          pincode?: string
+          preliminary_grade?: string
+          quantity_kg?: number
+          ticket_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "grade_tickets_harvest_batch_id_fkey"
+            columns: ["harvest_batch_id"]
+            isOneToOne: false
+            referencedRelation: "harvest_batches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       harvest_batches: {
         Row: {
           created_at: string
           crop: string
           district: string
           farmer_id: string
+          final_grade: string | null
           grade: string
           harvest_date: string
           id: string
           pincode: string
+          preliminary_grade: string | null
           quantity_kg: number
         }
         Insert: {
@@ -371,10 +417,12 @@ export type Database = {
           crop: string
           district: string
           farmer_id: string
+          final_grade?: string | null
           grade: string
           harvest_date?: string
           id?: string
           pincode: string
+          preliminary_grade?: string | null
           quantity_kg: number
         }
         Update: {
@@ -382,10 +430,12 @@ export type Database = {
           crop?: string
           district?: string
           farmer_id?: string
+          final_grade?: string | null
           grade?: string
           harvest_date?: string
           id?: string
           pincode?: string
+          preliminary_grade?: string | null
           quantity_kg?: number
         }
         Relationships: []

@@ -25,6 +25,7 @@ import SoilAnalysis from "./pages/SoilAnalysis";
 import PesticideDistribution from "./pages/PesticideDistribution";
 import Microfinance from "./pages/Microfinance";
 import SmartSale from "./pages/SmartSale";
+import VerifyGrade from "./pages/VerifyGrade";
 
 const queryClient = new QueryClient();
 
@@ -59,6 +60,7 @@ const App = () => (
                   <Route path="/pesticides" element={<PesticideDistribution />} />
                   <Route path="/microfinance" element={<Microfinance />} />
                   <Route path="/smart-sale" element={<SmartSale />} />
+                  <Route path="/verify-grade" element={<VerifyGrade />} />
                 </Route>
                 <Route path="*" element={<NotFound />} />
               </Routes>
