@@ -3,6 +3,7 @@ import { MapPin, Bell, Mic, FileText, Calendar, MessageCircle, Sprout, AlertTria
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { WeatherWidget } from "@/components/dashboard/WeatherWidget";
+import { SmartAlertsCard } from "@/components/dashboard/SmartAlertsCard";
 import { NotificationCenter } from "@/components/notifications/NotificationCenter";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,16 +14,6 @@ interface FarmInfo {
   name: string;
   area: number | null;
   areaUnit: string | null;
-}
-
-interface AlertItem {
-  id: string;
-  icon: React.ElementType;
-  title: string;
-  titleMl: string;
-  description: string;
-  type: "warning" | "danger" | "info";
-  color: string;
 }
 
 const quickActions = [
@@ -57,36 +48,6 @@ const quickActions = [
     path: "/chat", 
     color: "bg-harvest-gold",
     gradient: "from-harvest-gold to-harvest-gold/80"
-  },
-];
-
-const sampleAlerts: AlertItem[] = [
-  {
-    id: "1",
-    icon: CloudRain,
-    title: "Heavy Rain Expected",
-    titleMl: "കനത്ത മഴ പ്രതീക്ഷിക്കുന്നു",
-    description: "Rain forecasted tomorrow. Avoid spraying pesticides.",
-    type: "warning",
-    color: "text-warning"
-  },
-  {
-    id: "2",
-    icon: Bug,
-    title: "Pest Alert in Your Area",
-    titleMl: "നിങ്ങളുടെ പ്രദേശത്ത് കീട മുന്നറിയിപ്പ്",
-    description: "Brown Plant Hopper reported 5km away. Inspect your paddy.",
-    type: "danger",
-    color: "text-destructive"
-  },
-  {
-    id: "3",
-    icon: TrendingUp,
-    title: "Price Update",
-    titleMl: "വില അപ്ഡേറ്റ്",
-    description: "Coconut prices increased by 12% this week.",
-    type: "info",
-    color: "text-primary"
   },
 ];
 
@@ -213,51 +174,9 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Alerts Section */}
+        {/* Smart Alerts Section */}
         <div className="animate-slide-up" style={{ animationDelay: "200ms" }}>
-          <div className="flex items-center gap-2 mb-3">
-            <AlertTriangle className="w-5 h-5 text-warning" />
-            <h2 className="text-lg font-semibold">Alerts & Updates</h2>
-            <span className="text-sm text-muted-foreground font-malayalam">
-              അറിയിപ്പുകൾ
-            </span>
-          </div>
-
-          <div className="space-y-3">
-            {sampleAlerts.map((alert, index) => (
-              <Card 
-                key={alert.id} 
-                className={cn(
-                  "border-l-4 transition-all duration-200 hover:shadow-md",
-                  alert.type === "warning" && "border-l-warning bg-warning/5",
-                  alert.type === "danger" && "border-l-destructive bg-destructive/5",
-                  alert.type === "info" && "border-l-primary bg-primary/5"
-                )}
-                style={{ animationDelay: `${(index + 3) * 100}ms` }}
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-start gap-3">
-                    <div className={cn("p-2 rounded-lg", 
-                      alert.type === "warning" && "bg-warning/20",
-                      alert.type === "danger" && "bg-destructive/20",
-                      alert.type === "info" && "bg-primary/20"
-                    )}>
-                      <alert.icon className={cn("w-5 h-5", alert.color)} />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-sm">{alert.title}</h3>
-                      <p className="text-xs text-muted-foreground font-malayalam mt-0.5">
-                        {alert.titleMl}
-                      </p>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {alert.description}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <SmartAlertsCard />
         </div>
 
         {/* Today's Tasks Preview */}

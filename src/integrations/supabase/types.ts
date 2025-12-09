@@ -73,6 +73,45 @@ export type Database = {
           },
         ]
       }
+      alerts: {
+        Row: {
+          action_url: string | null
+          category: string
+          created_at: string
+          expires_at: string | null
+          farmer_id: string
+          id: string
+          is_read: boolean
+          message: string
+          metadata: Json | null
+          title: string
+        }
+        Insert: {
+          action_url?: string | null
+          category?: string
+          created_at?: string
+          expires_at?: string | null
+          farmer_id: string
+          id?: string
+          is_read?: boolean
+          message: string
+          metadata?: Json | null
+          title: string
+        }
+        Update: {
+          action_url?: string | null
+          category?: string
+          created_at?: string
+          expires_at?: string | null
+          farmer_id?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          metadata?: Json | null
+          title?: string
+        }
+        Relationships: []
+      }
       buyers: {
         Row: {
           contact_info: string | null
@@ -133,6 +172,27 @@ export type Database = {
           id?: string
           role?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      crop_schedules: {
+        Row: {
+          created_at: string
+          crop_name: string
+          id: string
+          schedule: Json
+        }
+        Insert: {
+          created_at?: string
+          crop_name: string
+          id?: string
+          schedule: Json
+        }
+        Update: {
+          created_at?: string
+          crop_name?: string
+          id?: string
+          schedule?: Json
         }
         Relationships: []
       }
@@ -520,6 +580,33 @@ export type Database = {
           },
         ]
       }
+      market_price_history: {
+        Row: {
+          created_at: string
+          crop: string
+          district: string
+          id: string
+          price: number
+          recorded_date: string
+        }
+        Insert: {
+          created_at?: string
+          crop: string
+          district: string
+          id?: string
+          price: number
+          recorded_date?: string
+        }
+        Update: {
+          created_at?: string
+          crop?: string
+          district?: string
+          id?: string
+          price?: number
+          recorded_date?: string
+        }
+        Relationships: []
+      }
       microfinance_vendors: {
         Row: {
           business_address: string
@@ -637,6 +724,45 @@ export type Database = {
         }
         Relationships: []
       }
+      reminders: {
+        Row: {
+          activity_id: string | null
+          category: string
+          created_at: string
+          crop_id: string | null
+          due_date: string
+          farmer_id: string
+          id: string
+          is_sent: boolean
+          message: string
+          trigger_source: string
+        }
+        Insert: {
+          activity_id?: string | null
+          category?: string
+          created_at?: string
+          crop_id?: string | null
+          due_date: string
+          farmer_id: string
+          id?: string
+          is_sent?: boolean
+          message: string
+          trigger_source?: string
+        }
+        Update: {
+          activity_id?: string | null
+          category?: string
+          created_at?: string
+          crop_id?: string | null
+          due_date?: string
+          farmer_id?: string
+          id?: string
+          is_sent?: boolean
+          message?: string
+          trigger_source?: string
+        }
+        Relationships: []
+      }
       sale_recommendations: {
         Row: {
           best_channel: string
@@ -712,6 +838,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      scheme_deadlines: {
+        Row: {
+          created_at: string
+          deadline_date: string
+          description: string | null
+          district: string | null
+          id: string
+          scheme_url: string | null
+          state: string | null
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          deadline_date: string
+          description?: string | null
+          district?: string | null
+          id?: string
+          scheme_url?: string | null
+          state?: string | null
+          title: string
+        }
+        Update: {
+          created_at?: string
+          deadline_date?: string
+          description?: string | null
+          district?: string | null
+          id?: string
+          scheme_url?: string | null
+          state?: string | null
+          title?: string
+        }
+        Relationships: []
       }
       soil_reports: {
         Row: {

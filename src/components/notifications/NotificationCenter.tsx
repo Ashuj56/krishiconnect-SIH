@@ -18,8 +18,8 @@ interface Notification {
   id: string;
   title: string;
   message: string;
-  type: 'info' | 'warning' | 'alert' | 'reminder';
-  category: 'weather' | 'scheme' | 'task' | 'system' | 'general';
+  type: 'info' | 'warning' | 'alert' | 'reminder' | 'success';
+  category: 'weather' | 'scheme' | 'task' | 'system' | 'general' | 'crop' | 'market' | 'season' | 'activity' | 'loan';
   read: boolean;
   action_url?: string;
   created_at: string;
@@ -30,6 +30,7 @@ const typeIcons = {
   warning: AlertTriangle,
   alert: AlertTriangle,
   reminder: Clock,
+  success: Check,
 };
 
 const categoryIcons = {
@@ -38,6 +39,11 @@ const categoryIcons = {
   task: CheckSquare,
   system: Bell,
   general: Bell,
+  crop: CheckSquare,
+  market: Bell,
+  season: Clock,
+  activity: CheckSquare,
+  loan: FileText,
 };
 
 const typeColors = {
@@ -45,6 +51,7 @@ const typeColors = {
   warning: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
   alert: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
   reminder: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400",
+  success: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
 };
 
 export function NotificationCenter() {
