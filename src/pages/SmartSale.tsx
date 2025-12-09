@@ -20,6 +20,24 @@ const KERALA_DISTRICTS = [
   "Kozhikode", "Wayanad", "Kannur", "Kasaragod"
 ];
 
+// District to valid pincode ranges mapping for Kerala
+const DISTRICT_PINCODES: Record<string, { default: string; range: [number, number] }> = {
+  "Thiruvananthapuram": { default: "695001", range: [695001, 695615] },
+  "Kollam": { default: "691001", range: [691001, 691601] },
+  "Pathanamthitta": { default: "689501", range: [689501, 689711] },
+  "Alappuzha": { default: "688001", range: [688001, 690573] },
+  "Kottayam": { default: "686001", range: [686001, 686693] },
+  "Idukki": { default: "685501", range: [685501, 685621] },
+  "Ernakulam": { default: "682001", range: [682001, 683594] },
+  "Thrissur": { default: "680001", range: [680001, 680721] },
+  "Palakkad": { default: "678001", range: [678001, 679563] },
+  "Malappuram": { default: "676101", range: [676101, 676561] },
+  "Kozhikode": { default: "673001", range: [673001, 673661] },
+  "Wayanad": { default: "673121", range: [673121, 673596] },
+  "Kannur": { default: "670001", range: [670001, 670721] },
+  "Kasaragod": { default: "671121", range: [671121, 671551] }
+};
+
 const CROPS = [
   "Banana", "Coconut", "Pepper", "Cardamom", "Rubber", "Paddy", "Tapioca", 
   "Ginger", "Turmeric", "Arecanut", "Cashew", "Coffee", "Tea", "Jackfruit", 
@@ -160,11 +178,68 @@ export default function SmartSale() {
     }
   };
 
+  // Handle district change - auto-fill pincode
+  const handleDistrictChange = (selectedDistrict: string) => {
+    setDistrict(selectedDistrict);
+    const districtData = DISTRICT_PINCODES[selectedDistrict];
+    if (districtData) {
+      setPincode(districtData.default);
+    }
+  };
+
+  // Validate quantity input - only positive real numbers
+  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    // Allow empty string for clearing, or valid positive numbers
+    if (value === "" || /^[0-9]*\.?[0-9]*$/.test(value)) {
+      // Prevent leading zeros unless it's a decimal
+      if (value.length > 1 && value.startsWith("0") && !value.startsWith("0.")) {
+        setQuantityKg(value.slice(1));
+      } else {
+        setQuantityKg(value);
+      }
+    }
+  };
+
+  // Block invalid characters in quantity input
+  const handleQuantityKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // Block e, E, +, - and other non-numeric characters except decimal point
+    if (["e", "E", "+", "-"].includes(e.key)) {
+      e.preventDefault();
+    }
+  };
+
+  // Validate pincode for selected district
+  const validatePincode = (pincodeValue: string): boolean => {
+    if (!district || !pincodeValue || pincodeValue.length !== 6) return false;
+    const districtData = DISTRICT_PINCODES[district];
+    if (!districtData) return false;
+    const pincodeNum = parseInt(pincodeValue, 10);
+    return pincodeNum >= districtData.range[0] && pincodeNum <= districtData.range[1];
+  };
+
+  // Handle pincode change with validation
+  const handlePincodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/\D/g, "").slice(0, 6);
+    setPincode(value);
+  };
+
   const handleDetailsSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!crop || !quantityKg || !district || !pincode) {
       toast.error("Please fill all fields");
+      return;
+    }
+
+    const qty = parseFloat(quantityKg);
+    if (isNaN(qty) || qty <= 0) {
+      toast.error("Please enter a valid positive quantity");
+      return;
+    }
+
+    if (pincode.length !== 6 || !validatePincode(pincode)) {
+      toast.error(`Please enter a valid pincode for ${district}`);
       return;
     }
 
@@ -359,18 +434,19 @@ export default function SmartSale() {
                     <Label htmlFor="quantity">Quantity (kg)</Label>
                     <Input
                       id="quantity"
-                      type="number"
+                      type="text"
+                      inputMode="decimal"
                       placeholder="Enter quantity in kg"
                       value={quantityKg}
-                      onChange={(e) => setQuantityKg(e.target.value)}
-                      min="1"
+                      onChange={handleQuantityChange}
+                      onKeyDown={handleQuantityKeyDown}
                     />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="district">District</Label>
-                      <Select value={district} onValueChange={setDistrict}>
+                      <Select value={district} onValueChange={handleDistrictChange}>
                         <SelectTrigger>
                           <SelectValue placeholder="Select district" />
                         </SelectTrigger>
@@ -388,12 +464,16 @@ export default function SmartSale() {
                       <Input
                         id="pincode"
                         type="text"
+                        inputMode="numeric"
                         placeholder="6-digit pincode"
                         value={pincode}
-                        onChange={(e) => setPincode(e.target.value)}
+                        onChange={handlePincodeChange}
                         maxLength={6}
-                        pattern="[0-9]{6}"
+                        className={pincode.length === 6 && !validatePincode(pincode) ? "border-destructive" : ""}
                       />
+                      {pincode.length === 6 && !validatePincode(pincode) && (
+                        <p className="text-xs text-destructive">Invalid pincode for {district}</p>
+                      )}
                     </div>
                   </div>
 
