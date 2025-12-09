@@ -29,6 +29,14 @@ interface Crop {
   name: string;
 }
 
+interface Farm {
+  id: string;
+  total_area: number | null;
+  area_unit: string | null;
+}
+
+const quantityUnits = ["kg", "L", "mL", "g", "units", "bags", "packets", "bottles", "drums"];
+
 const activityIcons: Record<string, React.ComponentType<{ className?: string }>> = {
   irrigation: Droplets,
   fertilizer: Leaf,
@@ -62,6 +70,7 @@ export default function Activities() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [activities, setActivities] = useState<Activity[]>([]);
   const [crops, setCrops] = useState<Crop[]>([]);
+  const [farm, setFarm] = useState<Farm | null>(null);
   const [loading, setLoading] = useState(true);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -82,6 +91,7 @@ export default function Activities() {
     if (user) {
       fetchActivities();
       fetchCrops();
+      fetchFarm();
     }
   }, [user]);
 
@@ -116,6 +126,50 @@ export default function Activities() {
     if (data) {
       setCrops(data);
     }
+  };
+
+  const fetchFarm = async () => {
+    if (!user) return;
+
+    const { data } = await supabase
+      .from("farms")
+      .select("id, total_area, area_unit")
+      .eq("user_id", user.id)
+      .limit(1)
+      .single();
+
+    if (data) {
+      setFarm(data);
+    }
+  };
+
+  const calculateRemainingArea = () => {
+    if (!farm?.total_area || !newActivity.area_covered) return null;
+    
+    const areaCovered = parseFloat(newActivity.area_covered);
+    if (isNaN(areaCovered)) return null;
+    
+    // Convert farm area to activity unit if different
+    const farmUnit = farm.area_unit || "acres";
+    const activityUnit = newActivity.area_covered_unit;
+    
+    let farmAreaInActivityUnit = farm.total_area;
+    
+    // Simple conversion (approximate)
+    const conversionFactors: Record<string, number> = {
+      "acres": 1,
+      "hectares": 0.404686,
+      "cents": 100,
+      "sq.m": 4046.86,
+    };
+    
+    if (farmUnit !== activityUnit) {
+      const farmInAcres = farm.total_area / (conversionFactors[farmUnit] || 1);
+      farmAreaInActivityUnit = farmInAcres * (conversionFactors[activityUnit] || 1);
+    }
+    
+    const remaining = farmAreaInActivityUnit - areaCovered;
+    return remaining >= 0 ? remaining.toFixed(2) : null;
   };
 
   const handleAddActivity = async () => {
@@ -294,38 +348,38 @@ export default function Activities() {
       </header>
 
       <div className="p-4 space-y-4 animate-fade-in">
-        {/* Calendar */}
+        {/* Calendar - Compact */}
         <Card>
-          <CardHeader className="pb-2">
+          <CardHeader className="py-2 px-3">
             <div className="flex items-center justify-between">
-              <Button variant="ghost" size="icon" onClick={() => navigateMonth(-1)}>
-                <ChevronLeft className="w-5 h-5" />
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigateMonth(-1)}>
+                <ChevronLeft className="w-4 h-4" />
               </Button>
-              <CardTitle className="text-base">
-                {currentDate.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+              <CardTitle className="text-sm">
+                {currentDate.toLocaleDateString("en-US", { month: "short", year: "numeric" })}
               </CardTitle>
-              <Button variant="ghost" size="icon" onClick={() => navigateMonth(1)}>
-                <ChevronRight className="w-5 h-5" />
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigateMonth(1)}>
+                <ChevronRight className="w-4 h-4" />
               </Button>
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-7 gap-1 mb-2">
+          <CardContent className="px-2 pb-2">
+            <div className="grid grid-cols-7 gap-0.5 mb-1">
               {daysOfWeek.map((day) => (
-                <div key={day} className="text-center text-xs font-medium text-muted-foreground py-2">
-                  {day}
+                <div key={day} className="text-center text-[10px] font-medium text-muted-foreground py-1">
+                  {day.charAt(0)}
                 </div>
               ))}
             </div>
 
-            <div className="grid grid-cols-7 gap-1">
+            <div className="grid grid-cols-7 gap-0.5">
               {getMonthDays().map((date, index) => (
                 <button
                   key={index}
                   onClick={() => date && setSelectedDate(date)}
                   disabled={!date}
                   className={cn(
-                    "aspect-square rounded-lg flex flex-col items-center justify-center text-sm transition-all",
+                    "aspect-square rounded-md flex flex-col items-center justify-center text-xs transition-all",
                     date && isSelected(date) && "bg-primary text-primary-foreground",
                     date && isToday(date) && !isSelected(date) && "bg-primary/10 text-primary font-semibold",
                     date && !isSelected(date) && !isToday(date) && "hover:bg-muted",
@@ -334,10 +388,10 @@ export default function Activities() {
                 >
                   {date && (
                     <>
-                      <span>{date.getDate()}</span>
+                      <span className="text-[11px]">{date.getDate()}</span>
                       {hasActivity(date) && (
                         <span className={cn(
-                          "w-1 h-1 rounded-full mt-0.5",
+                          "w-1 h-1 rounded-full",
                           isSelected(date) ? "bg-primary-foreground" : "bg-primary"
                         )} />
                       )}
@@ -498,13 +552,16 @@ export default function Activities() {
                 onChange={(e) => setNewActivity({ ...newActivity, quantity: e.target.value })}
                 className="w-full h-12 px-4 rounded-xl bg-muted border-2 border-transparent focus:border-primary/50 outline-none"
               />
-              <input
-                type="text"
-                placeholder="Unit (kg, L, etc.)"
+              <select
                 value={newActivity.quantity_unit}
                 onChange={(e) => setNewActivity({ ...newActivity, quantity_unit: e.target.value })}
                 className="w-full h-12 px-4 rounded-xl bg-muted border-2 border-transparent focus:border-primary/50 outline-none"
-              />
+              >
+                <option value="">Select unit</option>
+                {quantityUnits.map((unit) => (
+                  <option key={unit} value={unit}>{unit}</option>
+                ))}
+              </select>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
@@ -526,6 +583,20 @@ export default function Activities() {
                 <option value="sq.m">Sq. Meters</option>
               </select>
             </div>
+
+            {newActivity.area_covered && farm?.total_area && calculateRemainingArea() !== null && (
+              <div className="p-3 rounded-xl bg-primary/10 border border-primary/20">
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-muted-foreground">Remaining Area:</span>
+                  <span className="font-semibold text-primary">
+                    {calculateRemainingArea()} {newActivity.area_covered_unit}
+                  </span>
+                </div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  Total farm: {farm.total_area} {farm.area_unit || "acres"}
+                </div>
+              </div>
+            )}
 
             <Button className="w-full" onClick={handleAddActivity} disabled={!selectedType || !newActivity.title}>
               {editingActivity ? "Update Activity" : "Add Activity"}
