@@ -6,8 +6,8 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  sendOtp: (phone: string) => Promise<{ error: Error | null }>;
-  verifyOtp: (phone: string, token: string) => Promise<{ error: Error | null; isNewUser?: boolean }>;
+  signUp: (email: string, password: string, fullName?: string) => Promise<{ error: Error | null }>;
+  signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
 }
 
@@ -38,41 +38,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Send OTP to phone number
-  const sendOtp = async (phone: string) => {
-    // Format phone number with country code if not present
-    const formattedPhone = phone.startsWith('+') ? phone : `+91${phone}`;
+  const signUp = async (email: string, password: string, fullName?: string) => {
+    const redirectUrl = `${window.location.origin}/`;
     
-    const { error } = await supabase.auth.signInWithOtp({
-      phone: formattedPhone,
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: redirectUrl,
+        data: {
+          full_name: fullName,
+        },
+      },
     });
     
     return { error: error as Error | null };
   };
 
-  // Verify OTP and sign in/up
-  const verifyOtp = async (phone: string, token: string) => {
-    const formattedPhone = phone.startsWith('+') ? phone : `+91${phone}`;
-    
-    const { data, error } = await supabase.auth.verifyOtp({
-      phone: formattedPhone,
-      token,
-      type: 'sms',
+  const signIn = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
     });
     
-    // Check if this is a new user (no profile exists)
-    let isNewUser = false;
-    if (data?.user && !error) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('full_name')
-        .eq('id', data.user.id)
-        .single();
-      
-      isNewUser = !profile?.full_name;
-    }
-    
-    return { error: error as Error | null, isNewUser };
+    return { error: error as Error | null };
   };
 
   const signOut = async () => {
@@ -80,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, sendOtp, verifyOtp, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, signUp, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   );
