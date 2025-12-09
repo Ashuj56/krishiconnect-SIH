@@ -42,18 +42,26 @@ interface SuitableCrop {
   reasonMl: string;
 }
 
+interface NutrientRange {
+  low: number;
+  medium: number;
+  high: number;
+  ideal: { min: number; max: number };
+}
+
 function analyzeNutrient(value: number, nutrient: 'N' | 'P' | 'K'): NutrientStatus {
-  const ranges = {
-    N: { low: 140, medium: 280, ideal: { min: 280, max: 560 } },
-    P: { low: 11, medium: 22, ideal: { min: 22, max: 56 } },
-    K: { low: 110, medium: 280, ideal: { min: 280, max: 560 } }
+  // Indian Standard ranges for soil nutrients (kg/ha)
+  const ranges: Record<'N' | 'P' | 'K', NutrientRange> = {
+    N: { low: 280, medium: 560, high: 560, ideal: { min: 280, max: 560 } },  // N: <280 Low, 280-560 Medium, >560 High
+    P: { low: 10, medium: 25, high: 25, ideal: { min: 10, max: 25 } },       // P: <10 Low, 10-25 Medium, >25 High
+    K: { low: 110, medium: 280, high: 280, ideal: { min: 110, max: 280 } }   // K: <110 Low, 110-280 Medium, >280 High
   };
 
   const range = ranges[nutrient];
   
   if (value < range.low) {
     return { level: 'Low', levelMl: 'കുറവ്', value, ideal: range.ideal };
-  } else if (value < range.medium) {
+  } else if (value <= range.medium) {
     return { level: 'Medium', levelMl: 'ഇടത്തരം', value, ideal: range.ideal };
   } else {
     return { level: 'Optimal', levelMl: 'ഉചിതം', value, ideal: range.ideal };
@@ -61,23 +69,15 @@ function analyzeNutrient(value: number, nutrient: 'N' | 'P' | 'K'): NutrientStat
 }
 
 function analyzePH(value: number): PHStatus {
-  const categories: { range: [number, number]; category: PHStatus['category']; categoryMl: string }[] = [
-    { range: [0, 4.5], category: 'Strongly Acidic', categoryMl: 'ശക്തമായ അമ്ലത്വം' },
-    { range: [4.5, 5.5], category: 'Acidic', categoryMl: 'അമ്ലത്വം' },
-    { range: [5.5, 6.5], category: 'Slightly Acidic', categoryMl: 'നേരിയ അമ്ലത്വം' },
-    { range: [6.5, 7.5], category: 'Neutral', categoryMl: 'നിഷ്പക്ഷം' },
-    { range: [7.5, 8.5], category: 'Slightly Alkaline', categoryMl: 'നേരിയ ക്ഷാരത്വം' },
-    { range: [8.5, 9.5], category: 'Alkaline', categoryMl: 'ക്ഷാരത്വം' },
-    { range: [9.5, 14], category: 'Strongly Alkaline', categoryMl: 'ശക്തമായ ക്ഷാരത്വം' },
-  ];
-
-  for (const cat of categories) {
-    if (value >= cat.range[0] && value < cat.range[1]) {
-      return { category: cat.category, categoryMl: cat.categoryMl, value };
-    }
+  // Simplified pH classification as per user requirements
+  // Acidic (<6.5), Neutral (6.5–7.5), Alkaline (>7.5)
+  if (value < 6.5) {
+    return { category: 'Acidic', categoryMl: 'അമ്ലത്വം', value };
+  } else if (value <= 7.5) {
+    return { category: 'Neutral', categoryMl: 'നിഷ്പക്ഷം', value };
+  } else {
+    return { category: 'Alkaline', categoryMl: 'ക്ഷാരത്വം', value };
   }
-  
-  return { category: 'Neutral', categoryMl: 'നിഷ്പക്ഷം', value };
 }
 
 function generateRecommendations(
