@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Leaf, Mail, Lock, User, ArrowRight, Eye, EyeOff, Phone, MapPin, Mountain, Droplets, Globe, Navigation, Loader2 } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Leaf, User, Phone, MapPin, Mountain, Droplets, Globe, Navigation, Loader2, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -10,13 +10,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 import { Language, translations } from "@/contexts/LanguageContext";
 import { keralaDistricts, getSoilTypesForDistrict, getPrimarySoilType } from "@/data/keralaSoilMapping";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 
-const emailSchema = z.string().email("Please enter a valid email address");
-const passwordSchema = z.string().min(6, "Password must be at least 6 characters");
-const phoneSchema = z.string().min(10, "Please enter a valid phone number");
+const phoneSchema = z.string().min(10, "Please enter a valid 10-digit phone number").max(10, "Phone number must be 10 digits");
 
 type AuthMode = "signin" | "signup";
-type SignupStep = 0 | 1 | 2; // 0 = language selection, 1 = personal, 2 = farm
+type AuthStep = "phone" | "otp" | "details" | "farm"; // phone -> otp -> details (signup only) -> farm (signup only)
 
 const waterSources = ["Well", "Canal", "Borewell", "River", "Rainwater", "Mixed"];
 
@@ -28,28 +27,29 @@ const languageOptions: { code: Language; name: string; nativeName: string }[] = 
 
 export default function Auth() {
   const [mode, setMode] = useState<AuthMode>("signin");
-  const [signupStep, setSignupStep] = useState<SignupStep>(0);
+  const [step, setStep] = useState<AuthStep>("phone");
   const [selectedLanguage, setSelectedLanguage] = useState<Language>("en");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
+  const [otp, setOtp] = useState("");
+  const [fullName, setFullName] = useState("");
   const [district, setDistrict] = useState("");
   const [village, setVillage] = useState("");
   const [landArea, setLandArea] = useState("");
   const [soilType, setSoilType] = useState("");
   const [availableSoilTypes, setAvailableSoilTypes] = useState<string[]>([]);
   const [waterSource, setWaterSource] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
   const [soilDetectedByGPS, setSoilDetectedByGPS] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+  const [resendTimer, setResendTimer] = useState(0);
   
   const navigate = useNavigate();
   const locationHook = useLocation();
-  const { signIn, signUp, user } = useAuth();
+  const { sendOtp, verifyOtp, user } = useAuth();
   const { toast } = useToast();
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   const from = (locationHook.state as any)?.from?.pathname || "/";
 
@@ -75,31 +75,22 @@ export default function Auth() {
     }
   }, []);
 
-  const validateStep1 = (): boolean => {
+  // Resend timer countdown
+  useEffect(() => {
+    if (resendTimer > 0) {
+      timerRef.current = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
+    }
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, [resendTimer]);
+
+  const validatePhone = (): boolean => {
     const newErrors: Record<string, string> = {};
-
-    if (!fullName.trim()) {
-      newErrors.fullName = "Please enter your name";
-    }
-
+    const cleanPhone = phone.replace(/\D/g, '');
+    
     try {
-      emailSchema.parse(email);
-    } catch (e) {
-      if (e instanceof z.ZodError) {
-        newErrors.email = e.errors[0].message;
-      }
-    }
-
-    try {
-      passwordSchema.parse(password);
-    } catch (e) {
-      if (e instanceof z.ZodError) {
-        newErrors.password = e.errors[0].message;
-      }
-    }
-
-    try {
-      phoneSchema.parse(phone);
+      phoneSchema.parse(cleanPhone);
     } catch (e) {
       if (e instanceof z.ZodError) {
         newErrors.phone = e.errors[0].message;
@@ -110,7 +101,18 @@ export default function Auth() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const validateStep2 = (): boolean => {
+  const validateDetails = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    if (!fullName.trim()) {
+      newErrors.fullName = "Please enter your name";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const validateFarm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
     if (!district) {
@@ -180,14 +182,19 @@ export default function Auth() {
             setAvailableSoilTypes(detectedSoilTypes.length > 0 ? detectedSoilTypes : [detectedSoilType]);
             setSoilDetectedByGPS(true);
             
+            // Set village if available
+            if (data.village) {
+              setVillage(data.village);
+            }
+            
             toast({
               title: "Location Detected",
-              description: `District: ${data.district}, Soil: ${data.soil_type}`,
+              description: `District: ${data.district}, Soil: ${detectedSoilType}`,
             });
           } else {
             toast({
               title: "Soil type not found",
-              description: "Soil type not found for this location. Please recheck.",
+              description: "Soil type not found for this location. Please select manually.",
               variant: "destructive",
             });
           }
@@ -222,91 +229,132 @@ export default function Auth() {
     );
   };
 
-  const validateSignIn = (): boolean => {
-    const newErrors: Record<string, string> = {};
-
-    try {
-      emailSchema.parse(email);
-    } catch (e) {
-      if (e instanceof z.ZodError) {
-        newErrors.email = e.errors[0].message;
-      }
-    }
-
-    try {
-      passwordSchema.parse(password);
-    } catch (e) {
-      if (e instanceof z.ZodError) {
-        newErrors.password = e.errors[0].message;
-      }
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleLanguageSelect = () => {
-    localStorage.setItem("krishi-sakhi-language", selectedLanguage);
-    if (mode === "signup") {
-      setSignupStep(1);
-    }
-  };
-
-  const handleNextStep = () => {
-    if (validateStep1()) {
-      setSignupStep(2);
-    }
-  };
-
-  const handleSignUp = async () => {
-    if (!validateStep2()) return;
+  const handleSendOtp = async () => {
+    if (!validatePhone()) return;
 
     setIsLoading(true);
     setErrors({});
 
     try {
-      const { error } = await signUp(email, password, fullName);
-      
+      const cleanPhone = phone.replace(/\D/g, '');
+      const { error } = await sendOtp(cleanPhone);
+
       if (error) {
-        if (error.message.includes("already registered")) {
-          toast({
-            title: "Account Exists",
-            description: "This email is already registered. Please sign in instead.",
-            variant: "destructive",
-          });
-          setMode("signin");
-          setSignupStep(0);
-        } else {
-          toast({
-            title: "Error",
-            description: error.message,
-            variant: "destructive",
-          });
-        }
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
         return;
       }
 
-      // Wait for auth to complete and get user
-      const { data: { user: newUser } } = await supabase.auth.getUser();
+      setOtpSent(true);
+      setStep("otp");
+      setResendTimer(60);
+      toast({
+        title: "OTP Sent",
+        description: `A 6-digit code has been sent to +91 ${cleanPhone}`,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (otp.length !== 6) {
+      setErrors({ otp: "Please enter the 6-digit OTP" });
+      return;
+    }
+
+    setIsLoading(true);
+    setErrors({});
+
+    try {
+      const cleanPhone = phone.replace(/\D/g, '');
+      const { error, isNewUser } = await verifyOtp(cleanPhone, otp);
+
+      if (error) {
+        toast({
+          title: "Verification Failed",
+          description: "Invalid OTP. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      localStorage.setItem("krishi-sakhi-language", selectedLanguage);
+
+      if (mode === "signup" || isNewUser) {
+        // New user - collect details
+        setStep("details");
+        toast({
+          title: "Phone Verified",
+          description: "Please complete your profile.",
+        });
+      } else {
+        // Existing user - update language and redirect
+        const { data: { user: loggedInUser } } = await supabase.auth.getUser();
+        if (loggedInUser) {
+          await supabase.from("profiles").update({
+            language: selectedLanguage,
+          }).eq("id", loggedInUser.id);
+        }
+        toast({
+          title: "Welcome Back!",
+          description: "Successfully signed in.",
+        });
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSaveDetails = async () => {
+    if (!validateDetails()) return;
+
+    setIsLoading(true);
+
+    try {
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
       
-      if (newUser) {
-        // Format location as "Village, District, Kerala"
+      if (currentUser) {
+        await supabase.from("profiles").update({
+          full_name: fullName,
+          phone: phone.replace(/\D/g, ''),
+          language: selectedLanguage,
+        }).eq("id", currentUser.id);
+      }
+
+      setStep("farm");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSaveFarm = async () => {
+    if (!validateFarm()) return;
+
+    setIsLoading(true);
+
+    try {
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      
+      if (currentUser) {
+        // Format location
         const formattedLocation = village.trim() 
           ? `${village.trim()}, ${district}, Kerala` 
           : `${district}, Kerala`;
 
-        // Update profile with phone, location, and language
+        // Update profile location
         await supabase.from("profiles").update({
-          phone,
           location: formattedLocation,
-          language: selectedLanguage,
-        }).eq("id", newUser.id);
+        }).eq("id", currentUser.id);
 
         // Create farm record
         await supabase.from("farms").insert({
-          user_id: newUser.id,
+          user_id: currentUser.id,
           name: `${fullName}'s Farm`,
-          location: district, // Store district for easy lookup
+          location: district,
           total_area: parseFloat(landArea),
           area_unit: "acres",
           soil_type: soilType,
@@ -323,63 +371,40 @@ export default function Auth() {
     }
   };
 
-  const handleSignIn = async () => {
-    if (!validateSignIn()) return;
-
-    setIsLoading(true);
-    setErrors({});
-
-    try {
-      const { error } = await signIn(email, password);
-      
-      if (!error) {
-        // Update language preference after successful login
-        localStorage.setItem("krishi-sakhi-language", selectedLanguage);
-        
-        // Get user and update profile language
-        const { data: { user: loggedInUser } } = await supabase.auth.getUser();
-        if (loggedInUser) {
-          await supabase.from("profiles").update({
-            language: selectedLanguage,
-          }).eq("id", loggedInUser.id);
-        }
-      }
-      
-      if (error) {
-        if (error.message.includes("Invalid login credentials")) {
-          toast({
-            title: "Login Failed",
-            description: "Invalid email or password. Please try again.",
-            variant: "destructive",
-          });
-        } else {
-          toast({
-            title: "Error",
-            description: error.message,
-            variant: "destructive",
-          });
-        }
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleSubmit = async () => {
-    if (mode === "signin") {
-      await handleSignIn();
-    } else if (signupStep === 0) {
-      handleLanguageSelect();
-    } else if (signupStep === 1) {
-      handleNextStep();
-    } else {
-      await handleSignUp();
-    }
+  const handleResendOtp = async () => {
+    if (resendTimer > 0) return;
+    await handleSendOtp();
   };
 
   const resetForm = () => {
-    setSignupStep(0);
+    setStep("phone");
+    setOtp("");
+    setOtpSent(false);
     setErrors({});
+  };
+
+  const getStepTitle = () => {
+    if (mode === "signin") {
+      return step === "phone" ? t("signIn") : "Verify OTP";
+    }
+    switch (step) {
+      case "phone": return t("signUp");
+      case "otp": return "Verify OTP";
+      case "details": return t("createAccount");
+      case "farm": return t("farmDetails");
+    }
+  };
+
+  const getStepDescription = () => {
+    if (mode === "signin") {
+      return step === "phone" ? "Enter your phone number to sign in" : "Enter the 6-digit code sent to your phone";
+    }
+    switch (step) {
+      case "phone": return "Enter your phone number to get started";
+      case "otp": return "Enter the 6-digit code sent to your phone";
+      case "details": return "Enter your personal details";
+      case "farm": return "Tell us about your farm";
+    }
   };
 
   return (
@@ -408,163 +433,174 @@ export default function Auth() {
       {/* Auth Card */}
       <Card className="rounded-t-3xl rounded-b-none border-b-0 safe-bottom relative z-10 bg-card/95 backdrop-blur-sm">
         <CardHeader className="text-center pb-2">
-          <CardTitle>
-            {mode === "signin" 
-              ? t("welcomeBack") 
-              : signupStep === 0
-                ? t("selectLanguage")
-                : signupStep === 1 
-                  ? t("createAccount")
-                  : t("farmDetails")}
-          </CardTitle>
-          <p className="text-sm text-muted-foreground mt-1">
-            {mode === "signin" 
-              ? "Sign in to access your farm data" 
-              : signupStep === 0
-                ? "Choose your preferred language"
-                : signupStep === 1
-                  ? "Enter your personal details"
-                  : "Tell us about your farm"}
-          </p>
+          <CardTitle>{getStepTitle()}</CardTitle>
+          <p className="text-sm text-muted-foreground mt-1">{getStepDescription()}</p>
         </CardHeader>
         <CardContent className="pb-8 space-y-4">
-          {/* Mode Toggle */}
-          <div className="flex rounded-xl bg-muted p-1 mb-6">
-            <button
-              onClick={() => { setMode("signin"); resetForm(); }}
-              className={cn(
-                "flex-1 py-2.5 rounded-lg text-sm font-medium transition-all",
-                mode === "signin" 
-                  ? "bg-card shadow-sm text-foreground" 
-                  : "text-muted-foreground"
-              )}
-            >
-              {t("signIn")}
-            </button>
-            <button
-              onClick={() => { setMode("signup"); resetForm(); }}
-              className={cn(
-                "flex-1 py-2.5 rounded-lg text-sm font-medium transition-all",
-                mode === "signup" 
-                  ? "bg-card shadow-sm text-foreground" 
-                  : "text-muted-foreground"
-              )}
-            >
-              {t("signUp")}
-            </button>
-          </div>
-
-          {/* Language Selection for Sign In */}
-          {mode === "signin" && (
-            <>
-              <div className="space-y-3 mb-4">
-                <label className="text-sm font-medium flex items-center gap-2">
-                  <Globe className="w-4 h-4" />
-                  {t("selectLanguage")}
-                </label>
-                <div className="grid grid-cols-3 gap-2">
-                  {languageOptions.map((lang) => (
-                    <button
-                      key={lang.code}
-                      onClick={() => {
-                        setSelectedLanguage(lang.code);
-                        localStorage.setItem("krishi-sakhi-language", lang.code);
-                      }}
-                      className={cn(
-                        "p-3 rounded-xl border-2 transition-all text-center",
-                        selectedLanguage === lang.code
-                          ? "border-primary bg-primary/10"
-                          : "border-border hover:border-primary/50"
-                      )}
-                    >
-                      <span className="block text-lg font-semibold">{lang.nativeName}</span>
-                      <span className="text-xs text-muted-foreground">{lang.name}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <div className="relative">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder={t("email")}
-                    className={cn(
-                      "w-full h-14 pl-12 pr-4 rounded-xl bg-muted border-2 border-transparent focus:ring-0 focus:border-primary/50 outline-none",
-                      errors.email && "border-destructive"
-                    )}
-                  />
-                </div>
-                {errors.email && <p className="text-xs text-destructive pl-1">{errors.email}</p>}
-              </div>
-
-              <div className="space-y-1.5">
-                <div className="relative">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder={t("password")}
-                    onKeyPress={(e) => e.key === "Enter" && handleSubmit()}
-                    className={cn(
-                      "w-full h-14 pl-12 pr-12 rounded-xl bg-muted border-2 border-transparent focus:ring-0 focus:border-primary/50 outline-none",
-                      errors.password && "border-destructive"
-                    )}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  >
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                  </button>
-                </div>
-                {errors.password && <p className="text-xs text-destructive pl-1">{errors.password}</p>}
-              </div>
-            </>
+          {/* Mode Toggle - only show on phone step */}
+          {step === "phone" && (
+            <div className="flex rounded-xl bg-muted p-1 mb-6">
+              <button
+                onClick={() => { setMode("signin"); resetForm(); }}
+                className={cn(
+                  "flex-1 py-2.5 rounded-lg text-sm font-medium transition-all",
+                  mode === "signin" 
+                    ? "bg-card shadow-sm text-foreground" 
+                    : "text-muted-foreground"
+                )}
+              >
+                {t("signIn")}
+              </button>
+              <button
+                onClick={() => { setMode("signup"); resetForm(); }}
+                className={cn(
+                  "flex-1 py-2.5 rounded-lg text-sm font-medium transition-all",
+                  mode === "signup" 
+                    ? "bg-card shadow-sm text-foreground" 
+                    : "text-muted-foreground"
+                )}
+              >
+                {t("signUp")}
+              </button>
+            </div>
           )}
 
-          {/* Sign Up Step 0 - Language Selection */}
-          {mode === "signup" && signupStep === 0 && (
-            <div className="space-y-4">
-              <div className="grid gap-3">
+          {/* Language Selection - only on phone step */}
+          {step === "phone" && (
+            <div className="space-y-3 mb-4">
+              <label className="text-sm font-medium flex items-center gap-2">
+                <Globe className="w-4 h-4" />
+                {t("selectLanguage")}
+              </label>
+              <div className="grid grid-cols-3 gap-2">
                 {languageOptions.map((lang) => (
                   <button
                     key={lang.code}
-                    onClick={() => setSelectedLanguage(lang.code)}
+                    onClick={() => {
+                      setSelectedLanguage(lang.code);
+                      localStorage.setItem("krishi-sakhi-language", lang.code);
+                    }}
                     className={cn(
-                      "p-4 rounded-xl border-2 transition-all flex items-center gap-4",
+                      "p-3 rounded-xl border-2 transition-all text-center",
                       selectedLanguage === lang.code
                         ? "border-primary bg-primary/10"
                         : "border-border hover:border-primary/50"
                     )}
                   >
-                    <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
-                      <Globe className="w-6 h-6 text-primary" />
-                    </div>
-                    <div className="text-left flex-1">
-                      <span className="block text-lg font-semibold">{lang.nativeName}</span>
-                      <span className="text-sm text-muted-foreground">{lang.name}</span>
-                    </div>
-                    {selectedLanguage === lang.code && (
-                      <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
-                        <svg className="w-4 h-4 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                        </svg>
-                      </div>
-                    )}
+                    <span className="block text-lg font-semibold">{lang.nativeName}</span>
+                    <span className="text-xs text-muted-foreground">{lang.name}</span>
                   </button>
                 ))}
               </div>
             </div>
           )}
 
-          {/* Sign Up Step 1 - Personal Details */}
-          {mode === "signup" && signupStep === 1 && (
+          {/* Phone Input Step */}
+          {step === "phone" && (
+            <>
+              <div className="space-y-1.5">
+                <div className="relative">
+                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <div className="absolute left-12 top-1/2 -translate-y-1/2 text-muted-foreground border-r pr-2 mr-2">
+                    +91
+                  </div>
+                  <input
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                    placeholder="Enter 10-digit mobile number"
+                    className={cn(
+                      "w-full h-14 pl-24 pr-4 rounded-xl bg-muted border-2 border-transparent focus:ring-0 focus:border-primary/50 outline-none",
+                      errors.phone && "border-destructive"
+                    )}
+                    maxLength={10}
+                  />
+                </div>
+                {errors.phone && <p className="text-xs text-destructive pl-1">{errors.phone}</p>}
+              </div>
+
+              <Button
+                className="w-full h-14 rounded-xl text-base font-semibold"
+                onClick={handleSendOtp}
+                disabled={isLoading || phone.length !== 10}
+              >
+                {isLoading ? (
+                  <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                ) : (
+                  <ShieldCheck className="w-5 h-5 mr-2" />
+                )}
+                Send OTP
+              </Button>
+            </>
+          )}
+
+          {/* OTP Verification Step */}
+          {step === "otp" && (
+            <>
+              <div className="flex flex-col items-center space-y-4">
+                <div className="text-center mb-2">
+                  <p className="text-sm text-muted-foreground">
+                    Code sent to <span className="font-semibold text-foreground">+91 {phone}</span>
+                  </p>
+                  <button 
+                    onClick={() => setStep("phone")}
+                    className="text-xs text-primary hover:underline mt-1"
+                  >
+                    Change number
+                  </button>
+                </div>
+
+                <InputOTP
+                  maxLength={6}
+                  value={otp}
+                  onChange={(value) => setOtp(value)}
+                >
+                  <InputOTPGroup>
+                    <InputOTPSlot index={0} />
+                    <InputOTPSlot index={1} />
+                    <InputOTPSlot index={2} />
+                    <InputOTPSlot index={3} />
+                    <InputOTPSlot index={4} />
+                    <InputOTPSlot index={5} />
+                  </InputOTPGroup>
+                </InputOTP>
+
+                {errors.otp && <p className="text-xs text-destructive">{errors.otp}</p>}
+
+                <div className="text-center">
+                  {resendTimer > 0 ? (
+                    <p className="text-sm text-muted-foreground">
+                      Resend OTP in <span className="font-semibold">{resendTimer}s</span>
+                    </p>
+                  ) : (
+                    <button
+                      onClick={handleResendOtp}
+                      className="text-sm text-primary hover:underline"
+                      disabled={isLoading}
+                    >
+                      Resend OTP
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <Button
+                className="w-full h-14 rounded-xl text-base font-semibold"
+                onClick={handleVerifyOtp}
+                disabled={isLoading || otp.length !== 6}
+              >
+                {isLoading ? (
+                  <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                ) : (
+                  <ShieldCheck className="w-5 h-5 mr-2" />
+                )}
+                Verify & Continue
+              </Button>
+            </>
+          )}
+
+          {/* Personal Details Step (Signup only) */}
+          {step === "details" && (
             <>
               <div className="space-y-1.5">
                 <div className="relative">
@@ -583,76 +619,31 @@ export default function Auth() {
                 {errors.fullName && <p className="text-xs text-destructive pl-1">{errors.fullName}</p>}
               </div>
 
-              <div className="space-y-1.5">
-                <div className="relative">
-                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <input
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder={t("phone")}
-                    className={cn(
-                      "w-full h-14 pl-12 pr-4 rounded-xl bg-muted border-2 border-transparent focus:ring-0 focus:border-primary/50 outline-none",
-                      errors.phone && "border-destructive"
-                    )}
-                  />
-                </div>
-                {errors.phone && <p className="text-xs text-destructive pl-1">{errors.phone}</p>}
-              </div>
-
-              <div className="space-y-1.5">
-                <div className="relative">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder={t("email")}
-                    className={cn(
-                      "w-full h-14 pl-12 pr-4 rounded-xl bg-muted border-2 border-transparent focus:ring-0 focus:border-primary/50 outline-none",
-                      errors.email && "border-destructive"
-                    )}
-                  />
-                </div>
-                {errors.email && <p className="text-xs text-destructive pl-1">{errors.email}</p>}
-              </div>
-
-              <div className="space-y-1.5">
-                <div className="relative">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder={t("password")}
-                    className={cn(
-                      "w-full h-14 pl-12 pr-12 rounded-xl bg-muted border-2 border-transparent focus:ring-0 focus:border-primary/50 outline-none",
-                      errors.password && "border-destructive"
-                    )}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  >
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                  </button>
-                </div>
-                {errors.password && <p className="text-xs text-destructive pl-1">{errors.password}</p>}
+              <div className="relative">
+                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <input
+                  type="tel"
+                  value={`+91 ${phone}`}
+                  disabled
+                  className="w-full h-14 pl-12 pr-4 rounded-xl bg-muted/50 border-2 border-transparent outline-none text-muted-foreground"
+                />
               </div>
 
               <Button
-                variant="ghost"
-                className="w-full"
-                onClick={() => setSignupStep(0)}
+                className="w-full h-14 rounded-xl text-base font-semibold"
+                onClick={handleSaveDetails}
+                disabled={isLoading}
               >
-                ← {t("back")}
+                {isLoading ? (
+                  <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                ) : null}
+                Continue
               </Button>
             </>
           )}
 
-          {/* Sign Up Step 2 - Farm Details */}
-          {mode === "signup" && signupStep === 2 && (
+          {/* Farm Details Step (Signup only) */}
+          {step === "farm" && (
             <>
               {/* GPS Location Detection Button */}
               <Button
@@ -738,7 +729,7 @@ export default function Auth() {
                 {errors.landArea && <p className="text-xs text-destructive pl-1">{errors.landArea}</p>}
               </div>
 
-              {/* Soil Type (Auto-filled based on GPS or district) */}
+              {/* Soil Type */}
               <div className="space-y-1.5">
                 <div className="relative">
                   <Mountain className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
@@ -751,34 +742,38 @@ export default function Auth() {
                     className={cn(
                       "w-full h-14 pl-12 pr-4 rounded-xl bg-muted border-2 border-transparent focus:ring-0 focus:border-primary/50 outline-none appearance-none",
                       errors.soilType && "border-destructive",
-                      soilDetectedByGPS && "border-primary/50 bg-primary/5",
-                      !soilType && "text-muted-foreground"
+                      !soilType && "text-muted-foreground",
+                      soilDetectedByGPS && "border-primary/50 bg-primary/5"
                     )}
                   >
-                    <option value="">{t("soilType")}</option>
-                    {availableSoilTypes.length > 0 
-                      ? availableSoilTypes.map((type) => (
-                          <option key={type} value={type}>{type}</option>
-                        ))
-                      : <option value="" disabled>Select district first</option>
-                    }
+                    <option value="">Select Soil Type</option>
+                    {availableSoilTypes.length > 0 ? (
+                      availableSoilTypes.map((soil) => (
+                        <option key={soil} value={soil}>{soil}</option>
+                      ))
+                    ) : (
+                      <>
+                        <option value="Laterite">Laterite</option>
+                        <option value="Red Loam">Red Loam</option>
+                        <option value="Alluvial">Alluvial</option>
+                        <option value="Forest Loam">Forest Loam</option>
+                        <option value="Sandy">Sandy</option>
+                        <option value="Black Cotton">Black Cotton</option>
+                        <option value="Clay">Clay</option>
+                      </>
+                    )}
                   </select>
                 </div>
-                {soilType && district && (
-                  <p className="text-xs text-muted-foreground pl-1 flex items-center gap-1">
-                    {soilDetectedByGPS ? (
-                      <>
-                        <Navigation className="w-3 h-3" />
-                        Detected via GPS for {district}
-                      </>
-                    ) : (
-                      <>Auto-detected for {district}</>
-                    )}
+                {soilDetectedByGPS && (
+                  <p className="text-xs text-primary pl-1 flex items-center gap-1">
+                    <Navigation className="w-3 h-3" />
+                    Auto-detected from GPS
                   </p>
                 )}
                 {errors.soilType && <p className="text-xs text-destructive pl-1">{errors.soilType}</p>}
               </div>
 
+              {/* Water Source */}
               <div className="space-y-1.5">
                 <div className="relative">
                   <Droplets className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
@@ -790,7 +785,7 @@ export default function Auth() {
                       !waterSource && "text-muted-foreground"
                     )}
                   >
-                    <option value="">{t("waterSource")} (optional)</option>
+                    <option value="">{t("waterSource")} (Optional)</option>
                     {waterSources.map((source) => (
                       <option key={source} value={source}>{source}</option>
                     ))}
@@ -799,40 +794,32 @@ export default function Auth() {
               </div>
 
               <Button
+                className="w-full h-14 rounded-xl text-base font-semibold"
+                onClick={handleSaveFarm}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                ) : null}
+                Complete Setup
+              </Button>
+
+              <Button
                 variant="ghost"
                 className="w-full"
-                onClick={() => setSignupStep(1)}
+                onClick={() => setStep("details")}
               >
-                ← {t("back")}
+                ← Back
               </Button>
             </>
           )}
 
-          <Button
-            size="lg"
-            className="w-full h-14 text-base"
-            onClick={handleSubmit}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <div className="w-5 h-5 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
-            ) : (
-              <>
-                {mode === "signin" 
-                  ? t("signIn")
-                  : signupStep === 0
-                    ? t("continueBtn")
-                    : signupStep === 1 
-                      ? t("next")
-                      : t("createAccount")}
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </>
-            )}
-          </Button>
-
-          <p className="text-xs text-center text-muted-foreground pt-2">
-            By continuing, you agree to our Terms of Service and Privacy Policy
-          </p>
+          {/* Footer text */}
+          {step === "phone" && (
+            <p className="text-xs text-center text-muted-foreground pt-2">
+              By continuing, you agree to our Terms of Service and Privacy Policy
+            </p>
+          )}
         </CardContent>
       </Card>
     </div>
