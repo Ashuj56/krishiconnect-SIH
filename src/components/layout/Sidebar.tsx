@@ -31,6 +31,7 @@ const secondaryNavItems = [
   { icon: TrendingUp, label: "Market Prices", path: "/market" },
   { icon: Store, label: "Agri Distributors", path: "/pesticides" },
   { icon: Banknote, label: "Microfinance", path: "/microfinance" },
+  { icon: TrendingUp, label: "Smart Sale", path: "/smart-sale" },
   { icon: FileText, label: "Schemes", path: "/schemes" },
   { icon: BookOpen, label: "Knowledge Base", path: "/knowledge" },
 ];

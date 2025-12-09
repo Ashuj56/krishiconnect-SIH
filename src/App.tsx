@@ -24,6 +24,7 @@ import NotFound from "./pages/NotFound";
 import SoilAnalysis from "./pages/SoilAnalysis";
 import PesticideDistribution from "./pages/PesticideDistribution";
 import Microfinance from "./pages/Microfinance";
+import SmartSale from "./pages/SmartSale";
 
 const queryClient = new QueryClient();
 
@@ -57,6 +58,7 @@ const App = () => (
                   <Route path="/soil-analysis" element={<SoilAnalysis />} />
                   <Route path="/pesticides" element={<PesticideDistribution />} />
                   <Route path="/microfinance" element={<Microfinance />} />
+                  <Route path="/smart-sale" element={<SmartSale />} />
                 </Route>
                 <Route path="*" element={<NotFound />} />
               </Routes>

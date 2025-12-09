@@ -73,6 +73,45 @@ export type Database = {
           },
         ]
       }
+      buyers: {
+        Row: {
+          contact_info: string | null
+          created_at: string
+          crops_accepted: string[]
+          district: string
+          id: string
+          min_grade: string
+          name: string
+          pincodes_served: string[]
+          price_per_kg: number
+          type: string
+        }
+        Insert: {
+          contact_info?: string | null
+          created_at?: string
+          crops_accepted: string[]
+          district: string
+          id?: string
+          min_grade: string
+          name: string
+          pincodes_served: string[]
+          price_per_kg: number
+          type: string
+        }
+        Update: {
+          contact_info?: string | null
+          created_at?: string
+          crops_accepted?: string[]
+          district?: string
+          id?: string
+          min_grade?: string
+          name?: string
+          pincodes_served?: string[]
+          price_per_kg?: number
+          type?: string
+        }
+        Relationships: []
+      }
       chat_messages: {
         Row: {
           content: string
@@ -315,6 +354,42 @@ export type Database = {
         }
         Relationships: []
       }
+      harvest_batches: {
+        Row: {
+          created_at: string
+          crop: string
+          district: string
+          farmer_id: string
+          grade: string
+          harvest_date: string
+          id: string
+          pincode: string
+          quantity_kg: number
+        }
+        Insert: {
+          created_at?: string
+          crop: string
+          district: string
+          farmer_id: string
+          grade: string
+          harvest_date?: string
+          id?: string
+          pincode: string
+          quantity_kg: number
+        }
+        Update: {
+          created_at?: string
+          crop?: string
+          district?: string
+          farmer_id?: string
+          grade?: string
+          harvest_date?: string
+          id?: string
+          pincode?: string
+          quantity_kg?: number
+        }
+        Relationships: []
+      }
       lenders: {
         Row: {
           contact_info: string | null
@@ -512,6 +587,38 @@ export type Database = {
         }
         Relationships: []
       }
+      sale_recommendations: {
+        Row: {
+          best_channel: string
+          created_at: string
+          expected_income_best: number
+          harvest_batch_id: string
+          id: string
+        }
+        Insert: {
+          best_channel: string
+          created_at?: string
+          expected_income_best: number
+          harvest_batch_id: string
+          id?: string
+        }
+        Update: {
+          best_channel?: string
+          created_at?: string
+          expected_income_best?: number
+          harvest_batch_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sale_recommendations_harvest_batch_id_fkey"
+            columns: ["harvest_batch_id"]
+            isOneToOne: false
+            referencedRelation: "harvest_batches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       scan_results: {
         Row: {
           confidence: number | null
@@ -635,6 +742,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      value_added_options: {
+        Row: {
+          conversion_ratio: number
+          crop: string
+          id: string
+          min_grade_required: string
+          processing_cost_per_kg: number
+          product: string
+          selling_price_per_kg: number
+        }
+        Insert: {
+          conversion_ratio: number
+          crop: string
+          id?: string
+          min_grade_required: string
+          processing_cost_per_kg: number
+          product: string
+          selling_price_per_kg: number
+        }
+        Update: {
+          conversion_ratio?: number
+          crop?: string
+          id?: string
+          min_grade_required?: string
+          processing_cost_per_kg?: number
+          product?: string
+          selling_price_per_kg?: number
+        }
+        Relationships: []
       }
     }
     Views: {
