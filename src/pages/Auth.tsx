@@ -169,15 +169,16 @@ export default function Auth() {
           if (error) throw error;
 
           if (data?.success) {
+            // Update district field
             setDistrict(data.district);
-            setSoilType(data.soil_type);
-            setAvailableSoilTypes(data.soil_types || []);
-            setSoilDetectedByGPS(true);
             
-            // Try to get village from reverse geocoding
-            if (data.location?.latitude && data.location?.longitude) {
-              setVillage(data.village || '');
-            }
+            // Update soil type fields (API returns camelCase)
+            const detectedSoilType = data.soilType || data.soil_type;
+            const detectedSoilTypes = data.soilTypes || data.soil_types || [];
+            
+            setSoilType(detectedSoilType);
+            setAvailableSoilTypes(detectedSoilTypes.length > 0 ? detectedSoilTypes : [detectedSoilType]);
+            setSoilDetectedByGPS(true);
             
             toast({
               title: "Location Detected",
