@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Mic, FlaskConical, MessageCircle, Store, TrendingUp, Leaf, FileText, Banknote } from "lucide-react";
+import { Mic, FlaskConical, Calendar, MessageCircle, Store, TrendingUp, Leaf, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const quickActions = [
@@ -18,6 +18,14 @@ const quickActions = [
     path: "/soil-analysis", 
     gradient: "from-amber-500 to-orange-500",
     bgColor: "bg-amber-500/10"
+  },
+  { 
+    icon: Calendar, 
+    label: "കലണ്ടർ", 
+    labelEn: "Calendar", 
+    path: "/activities", 
+    gradient: "from-sky-500 to-blue-500",
+    bgColor: "bg-sky-500/10"
   },
   { 
     icon: MessageCircle, 
@@ -58,14 +66,6 @@ const quickActions = [
     path: "/schemes", 
     gradient: "from-indigo-500 to-blue-600",
     bgColor: "bg-indigo-500/10"
-  },
-  { 
-    icon: Banknote, 
-    label: "വായ്പ", 
-    labelEn: "Finance", 
-    path: "/microfinance", 
-    gradient: "from-sky-500 to-blue-500",
-    bgColor: "bg-sky-500/10"
   },
 ];
 
