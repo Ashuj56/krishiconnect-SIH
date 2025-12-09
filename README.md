@@ -71,7 +71,3 @@ Notes:
 - If the project contains separate frontend and backend folders, cd into the appropriate folder before running npm install and npm run dev.
 - Ensure you have Node.js and npm installed (Node.js v16+ recommended).
 - Supabase backend services may require environment variables or a running Supabase project; check the project for a .env.example or configuration instructions.
-
----
-
-Thank you for contributing to KrishiConnect! If you'd like, I can also add a short Troubleshooting section or environment-variable examples.
