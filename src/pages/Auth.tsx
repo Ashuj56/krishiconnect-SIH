@@ -387,7 +387,7 @@ export default function Auth() {
       {/* Full-screen background image */}
       <div 
         className="fixed inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: "url('/images/kerala-bg-5.jpg')" }}
+        style={{ backgroundImage: "url('/images/signup-bg.png')" }}
       />
       <div className="fixed inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/60" />
       
